@@ -35,7 +35,7 @@ class LibXorgConan(ConanFile):
     def package_info(self):
         self.cpp_info.includedirs.extend(
             ['/usr/include/xorg', '/usr/include/libdrm', '/usr/include/X11/dri'])
-        self.cpp_info.libs.exted(['dmx', 'fontenc', 'FS', 'ICE', 'SM', 'X11', 'Xau', 'Xaw7', 'Xt',
+        self.cpp_info.libs.extend(['dmx', 'fontenc', 'FS', 'ICE', 'SM', 'X11', 'Xau', 'Xaw7', 'Xt',
                                   'Xcomposite', 'Xcursor', 'Xdamage', 'Xfixes', 'Xdmcp', 'Xext',
                                   'Xfont2', 'Xft', 'Xi', 'Xinerama', 'xkbfile', 'Xmu', 'Xmuu',
                                   'Xpm', 'Xrandr', 'Xrender', 'XRes', 'Xss', 'Xtst', 'Xv', 'XvMC',
