@@ -96,7 +96,7 @@ def envInside(Map ctxt, Closure closure) {
     String binPath = isUnix() ? "$venvDirectory/bin/" : "$venvDirectory\\Scripts\\"
     String conanHome = isUnix() ? "${pwd()}/.conan" : "${pwd()}\\.conan"
     String hookErrorLevel = RAISE_HOOKS ? '40' : '50'
-    withEnv(["PATH+EXTRA=${binPath}", "CONAN_USER_HOME=${conanHome}", "CONAN_USER_HOME_SHORT=${conanHome}", "CONAN_HOOK_ERROR_LEVEL=${hookErrorLevel}"]) {
+    withEnv(["PATH+EXTRA=${binPath}", "CONAN_HOME=${conanHome}", "CONAN_USER_HOME=${conanHome}", "CONAN_USER_HOME_SHORT=${conanHome}", "CONAN_HOOK_ERROR_LEVEL=${hookErrorLevel}"]) {
         // This doesn't work if running docker.inside (https://issues.jenkins.io/browse/JENKINS-49076)
         closure()
     }
@@ -119,39 +119,37 @@ def envCreate(Map ctxt) {
 
 def createReference(Map ctxt, List recipesToBuild) {
     try {
-        withEnv(["CONAN_HOME=${env.WORKSPACE}/conan2_cache", "CONAN_USER_HOME=${env.WORKSPACE}/conan_cache"]) {
-            stage('Checkout SCM') {
-                checkout scm
-            }
+        stage('Checkout SCM') {
+            checkout scm
+        }
 
-            stage('Configure environment') {
-                envCreate(ctxt)
+        stage('Configure environment') {
+            envCreate(ctxt)
+            envInside(ctxt) {
+                ctxt.shFunction('cmake --version')
+                ctxt.shFunction('conan --version')
+                // ctxt.shFunction('conan config init --force')
+                // ctxt.shFunction('conan config install https://github.com/conan-io/hooks.git -sf hooks -tf hooks')
+                // ctxt.shFunction('conan config set hooks.conan-center')
+            }
+        }
+
+        for (recipe in recipesToBuild) {
+            stage("Create ${recipe.reference}") {
                 envInside(ctxt) {
-                    ctxt.shFunction('cmake --version')
-                    ctxt.shFunction('conan --version')
-                    // ctxt.shFunction('conan config init --force')
-                    // ctxt.shFunction('conan config install https://github.com/conan-io/hooks.git -sf hooks -tf hooks')
-                    // ctxt.shFunction('conan config set hooks.conan-center')
-                }
-            }
-
-            for (recipe in recipesToBuild) {
-                stage("Create ${recipe.reference}") {
-                    envInside(ctxt) {
-                        // ctxt.shFunction("conan info ${recipe.folder} --profile=default")
-                        writeFile(file: 'pr_host', text: ctxt.profileHost)
-                        if (ctxt.branch.name.contains('1.X')) {
-                            ctxt.shFunction("conan create ${recipe.folder} ${recipe.name}/${recipe.version}@ -pr:h=pr_host -pr:b=pr_host")
-                        }
-                        else {
-                            ctxt.shFunction("conan create ${recipe.folder} --name ${recipe.name} --version ${recipe.version} -pr:h=pr_host -pr:b=pr_host")
-                            if (ctxt.upload) {
-                                ctxt.shFunction("conan remote add conancenterv2 ${ART_URL}")
-                                withCredentials([usernamePassword(credentialsId: 'artifactory-conanv2beta', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_PASSWORD')]) {
-                                    ctxt.shFunction('conan remote login conancenterv2 $ARTIFACTORY_USER -p $ARTIFACTORY_PASSWORD')
-                                }
-                                ctxt.shFunction("conan upload ${recipe.name}/${recipe.version} -r conancenterv2 -c")
+                    // ctxt.shFunction("conan info ${recipe.folder} --profile=default")
+                    writeFile(file: 'pr_host', text: ctxt.profileHost)
+                    if (ctxt.branch.name.contains('1.X')) {
+                        ctxt.shFunction("conan create ${recipe.folder} ${recipe.name}/${recipe.version}@ -pr:h=pr_host -pr:b=pr_host")
+                    }
+                    else {
+                        ctxt.shFunction("conan create ${recipe.folder} --name ${recipe.name} --version ${recipe.version} -pr:h=pr_host -pr:b=pr_host")
+                        if (ctxt.upload) {
+                            ctxt.shFunction("conan remote add conancenterv2 ${ART_URL}")
+                            withCredentials([usernamePassword(credentialsId: 'artifactory-conanv2beta', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_PASSWORD')]) {
+                                ctxt.shFunction('conan remote login conancenterv2 $ARTIFACTORY_USER -p $ARTIFACTORY_PASSWORD')
                             }
+                            ctxt.shFunction("conan upload ${recipe.name}/${recipe.version} -r conancenterv2 -c")
                         }
                     }
                 }
@@ -183,7 +181,18 @@ node('Linux') {
             userRemoteConfigs: urc
         ])
 
-        def output = sh(script: 'git diff --name-only origin/master --diff-filter=AMR', returnStdout: true)
+        def output = null
+        def previous_commit = null
+        def current_commit = null
+
+        if (isMaster()) {
+            current_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+            previous_commit = sh(script: "git rev-parse HEAD^1", returnStdout: true).trim()
+            output = sh(script: "git diff --name-only ${previous_commit}..${current_commit} --diff-filter=AMR", returnStdout: true)
+        }
+        else {
+            output = sh(script: 'git diff --name-only origin/master --diff-filter=AMR', returnStdout: true)
+        }
         for (line in output.split('\n')) {
             def matcher = (line =~ /^recipes\/([^\/]+)\//)
             if (matcher) {
