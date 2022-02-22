@@ -117,7 +117,7 @@ class ZlibConan(ConanFile):
 
     def package(self):
         self._extract_license()
-        copy(self, "LICENSE", src=self.source_folder, dst="licenses")
+        copy(self, "LICENSE", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
         cmake = CMake(self)
         cmake.install()
         self._rename_libraries()
@@ -131,5 +131,5 @@ class ZlibConan(ConanFile):
 
 
         # !!! .names has to be mocked
-        # self.cpp_info.names["cmake_find_package"] = "ZLIB"
-        # self.cpp_info.names["cmake_find_package_multi"] = "ZLIB"
+        self.cpp_info.names["cmake_find_package"] = "ZLIB"
+        self.cpp_info.names["cmake_find_package_multi"] = "ZLIB"
