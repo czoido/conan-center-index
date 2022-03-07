@@ -1,5 +1,5 @@
 from conan import ConanFile
-from conan.tools import Version
+from conan.tools.scm import Version
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
 from conan.tools.files import get, patch, rename, chdir, load, save, copy
 from conan.tools.files import replace_in_file
