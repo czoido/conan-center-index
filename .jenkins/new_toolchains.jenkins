@@ -227,7 +227,7 @@ node('Linux') {
                 output = sh(script: 'git diff --name-only origin/master --diff-filter=AMR', returnStdout: true)
             }
             for (line in output.split('\n')) {
-                def matcher = (line =~ /^recipesToBuild\/([^\/]+)\//)
+                def matcher = (line =~ /^recipes\/([^\/]+)\//)
                 if (matcher) {
                     recipesToBuild.add(matcher[0][1] as String)
                 }
