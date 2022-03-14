@@ -46,6 +46,8 @@ class FmtConan(ConanFile):
             tc.variables["FMT_TEST"] = False
             tc.variables["FMT_INSTALL"] = True
             tc.variables["FMT_LIB_DIR"] = "lib"
+            if self._has_with_os_api_option:
+                self._cmake.definitions["FMT_OS"] = self.options.with_os_api
             tc.generate()  
 
     def layout(self):
