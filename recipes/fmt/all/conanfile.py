@@ -4,11 +4,8 @@ import shutil
 from conan import ConanFile
 from conan.tools.scm import Version
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
-from conan.tools.files import get, patch, rename, chdir, load, save, copy
-from conan.tools.files import replace_in_file
-from conan.tools.microsoft import msvc_runtime_flag
-from conan.tools.files import get, patch, copy, chdir, apply_conandata_patches
-from conan.tools.microsoft.visual import VCVars, is_msvc
+from conan.tools.files import get, copy, apply_conandata_patches
+from conan.tools.microsoft.visual import is_msvc, msvc_runtime_flag
 from conan.errors import ConanInvalidConfiguration
 
 required_conan_version = ">=1.43.0"
@@ -118,9 +115,6 @@ class FmtConan(ConanFile):
             self._rm_folder(os.path.join(self.package_folder, "res"))
 
     def package_info(self):
-        self.cpp_info.names["cmake_find_package"] = "fmt"
-        self.cpp_info.names["cmake_find_package_multi"] = "fmt"
-        self.cpp_info.names["pkg_config"] = "fmt"
         if self.options.header_only:
             self.cpp_info.components["fmt-header-only"].defines.append("FMT_HEADER_ONLY=1")
             if self.options.with_fmt_alias:
