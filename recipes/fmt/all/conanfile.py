@@ -53,10 +53,6 @@ class FmtConan(ConanFile):
     def layout(self):
         cmake_layout(self)
 
-    def export_sources(self):
-        for _patch in self.conan_data.get("patches", {}).get(self.version, []):
-            copy(self, _patch["patch_file"], src=".", dst=self.export_sources_folder)
-
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
