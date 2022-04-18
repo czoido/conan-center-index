@@ -36,7 +36,7 @@ class SDL2MixerConan(ConanFile):
                        "opus": True,
                        "mikmod": True,
                        "modplug": True,
-                       "fluidsynth": True,
+                       "fluidsynth": False, # TODO: add fluidsynth to Conan Center
                        "nativemidi": True,
                        "tinymidi": True}
 
@@ -83,9 +83,8 @@ class SDL2MixerConan(ConanFile):
             self.requires("libmikmod/3.3.11.1")
         if self.options.modplug:
             self.requires("libmodplug/0.8.9.0")
-        # if self.options.fluidsynth:
-        #     # TODO: add fluidsynth
-        #     self.requires("fluidsynth/2.2.2")
+        if self.options.fluidsynth:
+            self.requires("fluidsynth/2.2.2")
         if self.settings.os == "Linux":
             if self.options.tinymidi:
                 self.requires("tinymidi/cci.20130325")
