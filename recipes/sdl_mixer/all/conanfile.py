@@ -138,9 +138,13 @@ class SDL2MixerConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["SDL2_mixer"]
+
+        self.cpp_info.set_property("cmake_file_name", "SDL2_mixer")
+        self.cpp_info.set_property("cmake_target_name", "SDL2_mixer::SDL2_mixer")
+        self.cpp_info.set_property("pkg_config_name", "SDL2_mixer")
+
         self.cpp_info.includedirs.append(os.path.join("include", "SDL2"))
         # TODO: Add components in a sane way. SDL2_mixer might be incorrect, as the current dev version uses SDL2::image
         # The current dev version is the first version with official CMake support
         self.cpp_info.names["cmake_find_package"] = "SDL2_mixer"
         self.cpp_info.names["cmake_find_package_multi"] = "SDL2_mixer"
-        self.cpp_info.names["pkg_config"] = "SDL2_mixer"
