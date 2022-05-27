@@ -155,11 +155,13 @@ def createReference(Map ctxt, List referencesToBuild) {
                     // ctxt.shFunction("conan info ${reference.folder} --profile=default")
                     writeFile(file: 'pr_host', text: ctxt.profileHost)
                     def ret = -1
+                    // FIXME: add this to the global conf
+                    def extra_args = "-c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True"
                     if (ctxt.branch.name.contains('1.X')) {
-                        ret = ctxt.shReturnCode("conan create ${reference.folder} ${reference.name}/${reference.version}@ -pr:h=pr_host -pr:b=pr_host")
+                        ret = ctxt.shReturnCode("conan create ${reference.folder} ${reference.name}/${reference.version}@ -pr:h=pr_host -pr:b=pr_host ${extra_args}")
                     }
                     else {
-                        ret = ctxt.shReturnCode("conan create ${reference.folder} --name ${reference.name} --version ${reference.version} -pr:h=pr_host -pr:b=pr_host")
+                        ret = ctxt.shReturnCode("conan create ${reference.folder} --name ${reference.name} --version ${reference.version} -pr:h=pr_host -pr:b=pr_host ${extra_args}")
                     }
                     if(ret !=0 && ret !=6){
                         error "The conan create failed!"
