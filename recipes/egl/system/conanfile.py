@@ -19,7 +19,7 @@ class SysConfigEGLConan(ConanFile):
             raise ConanInvalidConfiguration("This recipes supports only Linux and FreeBSD")
             
     # TODO: check how to do with system packages in Conan 2.0
-    def package_info(self):
+    def package_id(self):
         self.info.header_only()
 
     def system_requirements(self):
