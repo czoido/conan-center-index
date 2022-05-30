@@ -279,6 +279,7 @@ node('Linux') {
                     conanBranchesInstalls.each { branch ->
                         stage("${branch.name}") {
                             docker.image(LINUX_CONTAINER).inside {
+                                sh("sudo apt-get update")
                                 createReference([python_host: 'python3',
                                                 shFunction: { data -> sh(data) },
                                                 shReturnCode: { data -> sh(script: data, returnStatus: true) },

@@ -23,16 +23,16 @@ class SysConfigEGLConan(ConanFile):
         self.info.header_only()
 
     def system_requirements(self):
-        yum = Yum(self).install(["mesa-libEGL-devel"], update=True)
+        yum = Yum(self).install(["mesa-libEGL-devel"])
         try:
             # this works for ubuntu>=20, debian>=11, pop>=20
-            apt = Apt(self).install(["libegl-dev"], update=True)
+            apt = Apt(self).install(["libegl-dev"])
         except ConanException:
-            apt = Apt(self).install(["libegl1-mesa-dev"], update=True)
+            apt = Apt(self).install(["libegl1-mesa-dev"])
 
-        pacman = PacMan(self).install(["libglvnd"], update=True)
-        zypper = Zypper(self).install(["Mesa-libEGL-devel"], update=True)
-        pkg = Pkg(self).install(["libglvnd"], update=True)
+        pacman = PacMan(self).install(["libglvnd"])
+        zypper = Zypper(self).install(["Mesa-libEGL-devel"])
+        pkg = Pkg(self).install(["libglvnd"])
 
         if all([True if result is None else False for result in [yum, apt, pacman, zypper, pkg]]):
             self.output.warn("Don't know how to install EGL for your distro.")
