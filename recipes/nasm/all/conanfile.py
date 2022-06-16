@@ -27,7 +27,7 @@ class NASMConan(ConanFile):
 
     def generate(self):
         at_toolchain = AutotoolsToolchain(self)
-        if self.settings.compiler == "Visual Studio":
+        if self.settings.compiler in ["Visual Studio", "msvc"]:
             VCVars(self).generate()
             at_toolchain.configure_args.append("-nologo")
         if self.settings.arch == "x86":
@@ -77,7 +77,7 @@ class NASMConan(ConanFile):
 
     def package(self):
         copy(self, "LICENSE", self.source_folder, os.path.join(self.package_folder, "licenses"))
-        if self.settings.compiler == "Visual Studio":
+        if self.settings.compiler in ["Visual Studio", "msvc"]:
             copy(self, "*.exe", self.source_folder, os.path.join(self.package_folder, "bin"), keep_path=False)
         else:
             autotools = Autotools(self)
