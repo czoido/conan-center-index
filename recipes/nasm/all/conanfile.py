@@ -88,3 +88,4 @@ class NASMConan(ConanFile):
         bin_path = os.path.join(self.package_folder, "bin")
         self.output.info("Appending PATH environment variable: {}".format(bin_path))
         self.buildenv_info.append_path("PATH", bin_path)
+
