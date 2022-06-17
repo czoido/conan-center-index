@@ -104,7 +104,7 @@ class GTestConan(ConanFile):
                 "compatible with compiler.runtime=MT/MTd"
             )
 
-        if self.info.settings.compiler.get_safe("cppstd"):
+        if self.info.settings.compiler.cppstd:
             check_min_cppstd(self, self._minimum_cpp_standard)
 
         def loose_lt_semver(v1, v2):
