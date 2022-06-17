@@ -73,12 +73,6 @@ class FmtConan(ConanFile):
         except Exception:
             pass
 
-    def validate(self):
-        if self.info.options.shared and is_msvc(self) and "MT" in msvc_runtime_flag(self):
-            raise ConanInvalidConfiguration(
-                "Visual Studio build for shared library with MT runtime is not supported"
-            )
-
     def package_id(self):
         if self.info.options.header_only:
             self.info.header_only()
