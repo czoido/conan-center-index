@@ -98,7 +98,7 @@ class GTestConan(ConanFile):
             del self.options.fPIC
 
     def validate(self):
-        if self.options.shared and self._is_msvc and "MT" in msvc_runtime_flag(self):
+        if self.info.options.shared and self._is_msvc and "MT" in msvc_runtime_flag(self):
             raise ConanInvalidConfiguration(
                 "gtest:shared=True with compiler=\"Visual Studio\" is not "
                 "compatible with compiler.runtime=MT/MTd"
