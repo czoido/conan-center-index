@@ -80,7 +80,7 @@ class FmtConan(ConanFile):
             )
 
     def package_id(self):
-        if self.options.header_only:
+        if self.info.options.header_only:
             self.info.header_only()
         else:
             del self.info.options.with_fmt_alias
