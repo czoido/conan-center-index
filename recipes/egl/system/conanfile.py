@@ -20,7 +20,7 @@ class SysConfigEGLConan(ConanFile):
             
     # TODO: check how to do with system packages in Conan 2.0
     def package_id(self):
-        self.info.header_only()
+        self.info.clear()
 
     def system_requirements(self):
         yum = Yum(self).install(["mesa-libEGL-devel"])
