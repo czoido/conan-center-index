@@ -4,11 +4,8 @@ import shutil
 from conan import ConanFile
 from conan.tools.scm import Version
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
-from conan.tools.files import get, copy, apply_conandata_patches
-from conan.tools.microsoft.visual import is_msvc, msvc_runtime_flag
-from conan.errors import ConanInvalidConfiguration
+from conan.tools.files import get, apply_conandata_patches, copy, rmdir
 
-required_conan_version = ">=1.43.0"
 
 
 class FmtConan(ConanFile):
@@ -63,30 +60,21 @@ class FmtConan(ConanFile):
             self.options.with_os_api = False
 
     def configure(self):
-        try:
-            if self.options.header_only:
-                del self.options.fPIC
-                del self.options.shared
-                del self.options.with_os_api
-            elif self.options.shared:
-                del self.options.fPIC
-        except Exception:
-            pass
-
-    def validate(self):
-        if self.options.get_safe("shared") and is_msvc(self) and "MT" in msvc_runtime_flag(self):
-            raise ConanInvalidConfiguration(
-                "Visual Studio build for shared library with MT runtime is not supported"
-            )
+        if self.options.header_only:
+            del self.options.fPIC
+            del self.options.shared
+            del self.options.with_os_api
+        elif self.options.shared:
+            del self.options.fPIC
 
     def package_id(self):
-        if self.options.header_only:
-            self.info.header_only()
+        if self.info.options.header_only:  # might be changed to self.info.clear() in 1.50
+            self.info.clear()
         else:
             del self.info.options.with_fmt_alias
 
     def source(self):
-        get(self, **self.conan_data["sources"][str(self.version)], destination=self.source_folder, strip_root=True)
+        get(self, **self.conan_data["sources"][str(self.version)], strip_root=True)
 
     def build(self):
         apply_conandata_patches(self)
@@ -95,35 +83,32 @@ class FmtConan(ConanFile):
             cmake.configure()
             cmake.build()
 
-    @staticmethod
-    def _rm_folder(folder):
-        try:
-            shutil.rmtree(folder)
-        except Exception:
-            pass
-
     def package(self):
-        copy(self, "LICENSE.rst", self.source_folder, os.path.join(self.package_folder, "licenses"))
+        copy(self, pattern="*LICENSE.rst", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
         if self.options.header_only:
-            copy(self, "*.h", dst="include", src=os.path.join(self._source_subfolder, "include"))
+            copy(self, pattern="*.h", src=os.path.join(self.source_folder, "include"), dst=os.path.join(self.package_folder, "include"))
         else:
             cmake = CMake(self)
             cmake.install()
-            self._rm_folder(os.path.join(self.package_folder, "lib", "cmake"))
-            self._rm_folder(os.path.join(self.package_folder, "lib", "pkgconfig"))
-            self._rm_folder(os.path.join(self.package_folder, "res"))
+            rmdir(self, os.path.join(self.package_folder, "lib", "cmake"))
+            rmdir(self, os.path.join(self.package_folder, "lib", "pkgconfig"))
+            rmdir(self, os.path.join(self.package_folder, "res"))
+            rmdir(self, os.path.join(self.package_folder, "share"))
 
     def package_info(self):
-        self.cpp_info.names["cmake_find_package"] = "fmt"
-        self.cpp_info.names["cmake_find_package_multi"] = "fmt"
-        self.cpp_info.names["pkg_config"] = "fmt"
+        target = "fmt-header-only" if self.options.header_only else "fmt"
+        self.cpp_info.set_property("cmake_target_name", "fmt::{}".format(target))
+
         if self.options.header_only:
-            self.cpp_info.components["fmt-header-only"].defines.append("FMT_HEADER_ONLY=1")
+            self.cpp_info.defines.append("FMT_HEADER_ONLY=1")
             if self.options.with_fmt_alias:
-                self.cpp_info.components["fmt-header-only"].defines.append("FMT_STRING_ALIAS=1")
+                self.cpp_info.defines.append("FMT_STRING_ALIAS=1")
         else:
             postfix = "d" if self.settings.build_type == "Debug" else ""
-            self.cpp_info.libs = ["fmt" + postfix]
+            libname = "fmt" + postfix
+            self.cpp_info.libs = [libname]
+            if self.settings.os == "Linux":
+                self.cpp_info.system_libs.extend(["m"])
             if self.options.with_fmt_alias:
                 self.cpp_info.defines.append("FMT_STRING_ALIAS=1")
             if self.options.shared:
