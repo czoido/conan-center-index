@@ -298,7 +298,7 @@ node('Linux') {
                     node('M1Macos') {
                         conanBranchesInstalls.each { branch ->
                             stage("${branch.name}") {
-                                withEnv(['PATH+EXTRA=/usr/local/bin']) { // Required to find CMake
+                                withEnv(["PYENV_ROOT=/Users/jenkins/.pyenv", "PATH+EXTRA=/Users/jenkins/.pyenv/shims:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"]) {
                                     createReference([python_host: 'python3',
                                                     shFunction: { data -> sh(data) },
                                                     shReturnCode: { data -> sh(script: data, returnStatus: true) },
