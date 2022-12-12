@@ -69,7 +69,7 @@ LINUX_PROFILE = """\
 
 MACOS_PROFILE = """\
     [settings]
-    arch=x86_64
+    arch=armv8
     build_type=Release
     compiler=apple-clang
     compiler.libcxx=libc++
@@ -295,7 +295,7 @@ node('Linux') {
                     }
                 },
                 macos: {
-                    node('Macos') {
+                    node('M1Macos') {
                         conanBranchesInstalls.each { branch ->
                             stage("${branch.name}") {
                                 withEnv(['PATH+EXTRA=/usr/local/bin']) { // Required to find CMake
