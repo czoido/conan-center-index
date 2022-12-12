@@ -317,15 +317,18 @@ node('Linux') {
                     node('Windows') {
                         conanBranchesInstalls.each { branch ->
                             stage("${branch.name}") {
-                                createReference([python_host: 'C:\\Python39\\python.exe',
-                                                shFunction: { data -> bat(data) },
-                                                shReturnCode: { data -> bat(script: data, returnStatus: true) },
-                                                isWindows: true,
-                                                isInsideDocker: false,
-                                                profileHost: getWindowsProfile(branch.name),
-                                                branch: branch,
-                                                upload: shouldUpload(branch.name)],
-                                                toBuild)
+                                String cmakePath = "C:\\cmake\\cmake-3.17.5-win64-x64\\bin"
+                                withEnv(["PATH+CMAKE=${cmakePath}"]) {
+                                    createReference([python_host: 'C:\\Python39\\python.exe',
+                                                    shFunction: { data -> bat(data) },
+                                                    shReturnCode: { data -> bat(script: data, returnStatus: true) },
+                                                    isWindows: true,
+                                                    isInsideDocker: false,
+                                                    profileHost: getWindowsProfile(branch.name),
+                                                    branch: branch,
+                                                    upload: shouldUpload(branch.name)],
+                                                    toBuild)
+                                }
                             }
                         }
                     }
