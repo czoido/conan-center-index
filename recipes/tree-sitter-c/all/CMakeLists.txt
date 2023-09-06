@@ -29,8 +29,8 @@ target_link_libraries(${PROJECT_NAME}
 )
 target_include_directories(${PROJECT_NAME}
     PRIVATE
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/lib/include>
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/src>
+        $<BUILD_INTERFACE:${TREE_SITTER_C_SRC_DIR}/src/lib/include>
+        $<BUILD_INTERFACE:${TREE_SITTER_C_SRC_DIR}/src/src>
 )
 set_target_properties(${PROJECT_NAME}
     PROPERTIES
