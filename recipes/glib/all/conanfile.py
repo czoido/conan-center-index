@@ -10,7 +10,6 @@ from conan.tools.scm import Version
 import sys
 import os
 import shutil
-import configparser
 
 
 required_conan_version = ">=1.53.0"
