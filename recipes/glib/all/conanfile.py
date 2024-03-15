@@ -47,6 +47,13 @@ class GLibConan(ConanFile):
     def export_sources(self):
         export_conandata_patches(self)
 
+    def validate(self):
+        if Version(self.version) >= "2.79":
+            # FIXME the sys python may not be the same that will execute in meson for embedded conan executables
+            if sys.version_info < (3,8,0):
+                # INFO: Actually work with Python 3.7 when building and using glib
+                self.output.error(f"{self.ref} requires Python >=3.8 due to usage of python-packaging")
+
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
