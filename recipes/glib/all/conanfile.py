@@ -82,12 +82,6 @@ class GLibConan(ConanFile):
         if is_apple_os(self):
             self.requires("libiconv/1.17")
 
-    def validate(self):
-        if Version(self.version) >= "2.79":
-            if sys.version_info < (3,8,0):
-                # INFO: Actually work with Python 3.7 when building and using glib
-                self.output.error(f"{self.ref} requires Python >=3.8 due to usage of python-packaging")
-
     def build_requirements(self):
         self.tool_requires("meson/1.2.2")
         if not self.conf.get("tools.gnu:pkg_config", check_type=str):
