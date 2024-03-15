@@ -94,19 +94,20 @@ class GLibConan(ConanFile):
             self.tool_requires("pkgconf/2.0.3")
 
     def source(self):
-        get(self, **self.conan_data["sources"][self.version][0], strip_root=True)
         if Version(self.version) >= "2.79":
+            get(self, **self.conan_data["sources"][self.version][0], strip_root=True)
             get(self, **self.conan_data["sources"][self.version][1], destination='python-packaging', strip_root=True)
-
+        else:
+            get(self, **self.conan_data["sources"][self.version], strip_root=True)
 
     def generate(self):
         virtual_build_env = VirtualBuildEnv(self)
         virtual_build_env.generate()
 
-        python_pack_env = Environment()
-        python_packaging_folder = os.path.join(self.source_folder, "python-packaging", "src")
-        python_pack_env.append_path("PYTHONPATH", python_packaging_folder)        
-        python_pack_env.vars(self, scope="build").save_script("packaging_python_path")
+        # packaging is needed for building glib and also for consumers to use gdbus-codegen
+        env = Environment()
+        env.append_path("PYTHONPATH", os.path.join(self.source_folder, "python-packaging", "src"))        
+        env.vars(self, scope="build").save_script("packaging_python_path")
 
         tc = PkgConfigDeps(self)
         tc.generate()
@@ -165,7 +166,8 @@ class GLibConan(ConanFile):
         rm(self, "*.pdb", os.path.join(self.package_folder, "bin"))
         fix_apple_shared_install_name(self)
         fix_msvc_libname(self)
-        
+
+        # TODO: handle packaging licenses it has both Apache and BSD        
         copy(self, "*", os.path.join(self.source_folder, "python-packaging", "src"), 
              os.path.join(self.package_folder, "python-packaging"))
 
