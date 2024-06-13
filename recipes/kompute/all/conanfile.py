@@ -46,8 +46,8 @@ class komputeRecipe(ConanFile):
 
     def requirements(self):
         self.requires("vulkan-loader/1.3.243.0")
-        self.requires("vulkan-headers/1.3.243.0")
-        self.requires("fmt/10.1.1")
+        self.requires("vulkan-headers/1.3.243.0", transitive_headers=True)
+        self.requires("fmt/10.2.1", transitive_headers=True)
         if self.options.with_spdlog:
             self.requires("spdlog/1.12.0")
         if self.options.build_python:
@@ -70,6 +70,7 @@ class komputeRecipe(ConanFile):
         tc.variables["KOMPUTE_OPT_USE_BUILT_IN_FMT"] = False
         tc.variables["KOMPUTE_OPT_USE_BUILT_IN_GOOGLE_TEST"] = False
         tc.variables["KOMPUTE_OPT_USE_BUILT_IN_PYBIND11"] = False
+        tc.variables["KOMPUTE_OPT_DISABLE_VULKAN_VERSION_CHECK"] = True
         tc.variables["KOMPUTE_OPT_USE_BUILT_IN_VULKAN_HEADER"] = False
         tc.generate()
 
@@ -80,6 +81,14 @@ class komputeRecipe(ConanFile):
             "find_package(Vulkan REQUIRED)",
             "find_package(Vulkan REQUIRED)\n        find_package(VulkanHeaders REQUIRED)",
         )
+
+        # replace_in_file(
+        #     self,
+        #     os.path.join(self.source_folder, "src", "logger", "CMakeLists.txt"),
+        #     r"target_compile_definitions(spdlog INTERFACE SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_${KOMPUTE_OPT_LOG_LEVEL})",
+        #     "",
+        # )
+
         cmake = CMake(self)
         cmake.configure()
         cmake.build()

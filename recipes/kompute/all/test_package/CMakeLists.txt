@@ -3,7 +3,5 @@ project(PackageTest CXX)
 
 find_package(kompute CONFIG REQUIRED)
 
-
-
 add_executable(example src/example.cpp)
 target_link_libraries(example kompute::kompute)
