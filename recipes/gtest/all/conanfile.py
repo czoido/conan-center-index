@@ -98,13 +98,7 @@ class GTestConan(ConanFile):
             del self.options.fPIC
 
     def validate(self):
-        if self.info.options.shared and self._is_msvc and "MT" in msvc_runtime_flag(self):
-            raise ConanInvalidConfiguration(
-                "gtest:shared=True with compiler=\"Visual Studio\" is not "
-                "compatible with compiler.runtime=MT/MTd"
-            )
-
-        if self.info.settings.compiler.cppstd:
+        if self.info.settings.compiler.get_safe("cppstd"):
             check_min_cppstd(self, self._minimum_cpp_standard)
 
         def loose_lt_semver(v1, v2):
