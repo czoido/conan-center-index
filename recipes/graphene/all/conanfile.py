@@ -27,11 +27,17 @@ class GrapheneConan(ConanFile):
         "shared": [True, False],
         "fPIC": [True, False],
         "with_glib": [True, False],
+        "with_gcc_vector": [True, False],
+        "with_sse2": [True, False],
+        "with_arm_neon": [True, False],
         }
     default_options = {
         "shared": False,
         "fPIC": True,
         "with_glib": True,
+        "with_gcc_vector": False,
+        "with_sse2": False,
+        "with_arm_neon": False,
     }
 
     def config_options(self):
@@ -89,6 +95,9 @@ class GrapheneConan(ConanFile):
             "tests": "false",
             "installed_tests": "false",
             "gtk_doc": "false",
+            "gcc_vector": "true" if self.options.get_safe("with_gcc_vector") else "false",
+            "sse2": "true" if self.options.get_safe("with_sse2") else "false",
+            "arm_neon": "true" if self.options.get_safe("with_arm_neon") else "false",
         })
         meson.project_options["gobject_types"] = "true" if self.options.with_glib else "false"
         if Version(self.version) < "1.10.4":
@@ -132,6 +141,15 @@ class GrapheneConan(ConanFile):
             self.cpp_info.components["graphene-gobject-1.0"].set_property("pkg_config_name","graphene-gobject-1.0")
             self.cpp_info.components["graphene-gobject-1.0"].includedirs = [os.path.join("include", "graphene-1.0")]
             self.cpp_info.components["graphene-gobject-1.0"].requires = ["graphene-1.0", "glib::gobject-2.0"]
+
+        pkgconfig_variables = {
+            "graphene_has_gcc": 1 if self.options.get_safe("with_gcc_vector") else 0,
+            "graphene_has_sse2": 1 if self.options.get_safe("with_sse2") else 0,
+            "graphene_has_neon": 1 if self.options.get_safe("with_arm_neon") else 0,
+        }
+        custom_content = "\n".join(f"{key}={value}" for key, value in pkgconfig_variables.items())
+        self.cpp_info.components["graphene-1.0"].set_property("pkg_config_custom_content", custom_content)
+        self.cpp_info.components["graphene-gobject-1.0"].set_property("pkg_config_custom_content", custom_content)
 
 def fix_msvc_libname(conanfile, remove_lib_prefix=True):
     """remove lib prefix & change extension to .lib in case of cl like compiler"""

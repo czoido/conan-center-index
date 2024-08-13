@@ -4,6 +4,7 @@ from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.env import VirtualBuildEnv, VirtualRunEnv
 from conan.tools.files import copy, get, replace_in_file, rm, rmdir
+from conan.tools.apple import is_apple_os
 from conan.tools.gnu import PkgConfigDeps
 from conan.tools.layout import basic_layout
 from conan.tools.meson import MesonToolchain, Meson
@@ -27,8 +28,6 @@ class GtkConan(ConanFile):
         "fPIC": [True, False],
         "with_wayland": [True, False],
         "with_x11": [True, False],
-        "with_pango": [True, False],
-        "with_ffmpeg": [True, False],
         "with_gstreamer": [True, False],
         "with_cups": [True, False],
         "with_cloudprint": [True, False],
@@ -38,8 +37,6 @@ class GtkConan(ConanFile):
         "fPIC": True,
         "with_wayland": False,
         "with_x11": True,
-        "with_pango": True,
-        "with_ffmpeg": False,
         "with_gstreamer": False,
         "with_cups": False,
         "with_cloudprint": False,
@@ -67,16 +64,18 @@ class GtkConan(ConanFile):
         if self.settings.os not in ["Linux", "FreeBSD"]:
             self.options.rm_safe("with_wayland")
             self.options.rm_safe("with_x11")
+        else:
+            if self.options.with_wayland or self.options.with_x11:
+                self.options["pango"].with_freetype = True
+
+        self.options["graphene"].with_glib = True
+
 
     def configure(self):
         if self.options.shared:
             self.options.rm_safe("fPIC")
         self.settings.rm_safe("compiler.libcxx")
         self.settings.rm_safe("compiler.cppstd")
-        if self.settings.os in ["Linux", "FreeBSD"]:
-            if self.options.with_wayland or self.options.with_x11:
-                if not self.options.with_pango:
-                    raise ConanInvalidConfiguration("with_pango option is mandatory when with_wayland or with_x11 is used")
 
     def layout(self):
         basic_layout(self, src_folder="src")
@@ -96,7 +95,7 @@ class GtkConan(ConanFile):
             self.requires("libpng/[>=1.6 <2]")
             self.requires("libtiff/4.6.0")
             self.requires("libjpeg/9e")
-            if Version(self.version) >= "4.13.2":
+            if Version(self.version) >= "4.13.2" and self.settings.os in ["Linux", "FreeBSD"]:
                 self.requires("libdrm/2.4.120")
         if self.settings.os in ["Linux", "FreeBSD"]:
             if self._gtk4 or self.options.with_wayland:
@@ -107,17 +106,15 @@ class GtkConan(ConanFile):
             if self.options.with_x11:
                 # https://gitlab.gnome.org/GNOME/gtk/-/blob/4.10.0/gdk/x11/gdkx11display.h#L35-36
                 self.requires("xorg/system", transitive_headers=True, transitive_libs=True)
+                self.requires("fontconfig/2.15.0")
         if self._gtk3:
             # https://gitlab.gnome.org/GNOME/gtk/-/blob/3.24.37/gtk/gtkwidget.h?ref_type=tags#L36
             self.requires("at-spi2-core/2.51.0", transitive_headers=True, transitive_libs=True)
         self.requires("libepoxy/1.5.10")
-        if self.options.with_pango:
-            self.requires("pango/1.51.0", transitive_headers=True, transitive_libs=True)
-        if self.options.with_ffmpeg:
-            self.requires("ffmpeg/6.1")
+        self.requires("pango/1.52.0", transitive_headers=True, transitive_libs=True)
         if self.options.with_gstreamer:
             self.requires("gstreamer/1.22.6")
-        self.requires("fontconfig/2.15.0", override=True)
+
 
     def validate(self):
         if self.settings.compiler == "gcc" and Version(self.settings.compiler.version) < "5":
@@ -151,9 +148,8 @@ class GtkConan(ConanFile):
         VirtualRunEnv(self).generate(scope="build")
 
         tc = MesonToolchain(self)
-        if self.settings.os in ["Linux", "FreeBSD"]:
-            tc.project_options["wayland_backend" if self._gtk3 else "wayland-backend"] = "true" if self.options.with_wayland else "false"
-            tc.project_options["x11_backend" if self._gtk3 else "x11-backend"] = "true" if self.options.with_x11 else "false"
+        tc.project_options["wayland_backend" if self._gtk3 else "wayland-backend"] = "true" if self.options.get_safe("with_wayland", False) else "false"
+        tc.project_options["x11_backend" if self._gtk3 else "x11-backend"] = "true" if self.options.get_safe("with_x11", False) else "false"
         tc.project_options["introspection"] = "false" if self._gtk3 else "disabled"
         tc.project_options["gtk_doc"] = "false"
         tc.project_options["man-pages" if self._gtk4 else "man"] = "false"
@@ -165,7 +161,6 @@ class GtkConan(ConanFile):
         tc.project_options["sysconfdir"] = os.path.join(self.package_folder, "res", "etc")
         if self._gtk4:
             enabled_disabled = lambda opt: "enabled" if opt else "disabled"
-            tc.project_options["media-ffmpeg"] = enabled_disabled(self.options.with_ffmpeg)
             tc.project_options["media-gstreamer"] = enabled_disabled(self.options.with_gstreamer)
             tc.project_options["print-cups"] = enabled_disabled(self.options.with_cups)
         tc.generate()
@@ -181,7 +176,6 @@ class GtkConan(ConanFile):
         self._patch_sources()
         meson = Meson(self)
         meson.configure()
-        # args = ["--wrap-mode=nofallback"]
         meson.build()
 
     def package(self):
@@ -199,8 +193,7 @@ class GtkConan(ConanFile):
             self.cpp_info.components["gdk-3.0"].libs = ["gdk-3"]
             self.cpp_info.components["gdk-3.0"].includedirs = [os.path.join("include", "gtk-3.0")]
             self.cpp_info.components["gdk-3.0"].requires = []
-            if self.options.with_pango:
-                self.cpp_info.components["gdk-3.0"].requires.extend(["pango::pango_", "pango::pangocairo"])
+            self.cpp_info.components["gdk-3.0"].requires.extend(["pango::pango_", "pango::pangocairo"])
             self.cpp_info.components["gdk-3.0"].requires.append("gdk-pixbuf::gdk-pixbuf")
             if not is_msvc(self):
                 self.cpp_info.components["gdk-3.0"].requires.extend(["cairo::cairo", "cairo::cairo-gobject"])
@@ -219,7 +212,7 @@ class GtkConan(ConanFile):
             if self.settings.os in ["Linux", "FreeBSD"]:
                 self.cpp_info.components["gtk+-3.0"].requires.append("at-spi2-core::at-spi2-core")
             self.cpp_info.components["gtk+-3.0"].requires.append("libepoxy::libepoxy")
-            if self.options.with_pango:
+            if self.options.get_safe("with_x11") or self.options.get_safe("with_wayland"):
                 self.cpp_info.components["gtk+-3.0"].requires.append("pango::pangoft2")
             if self.settings.os in ["Linux", "FreeBSD"]:
                 self.cpp_info.components["gtk+-3.0"].requires.append("glib::gio-unix-2.0")
@@ -230,6 +223,8 @@ class GtkConan(ConanFile):
             self.cpp_info.components["gail-3.0"].requires = ["gtk+-3.0", "at-spi2-core::at-spi2-core"]
             self.cpp_info.components["gail-3.0"].includedirs = [os.path.join("include", "gail-3.0")]
             self.cpp_info.components["gail-3.0"].set_property("pkg_config_name", "gail-3.0")
+            if is_apple_os(self):
+                self.cpp_info.components["gtk+-3.0"].frameworks.extend(["CoreVideo" ,"CoreGraphics" ,"QuartzCore" , "Carbon", "IOSurface"])
         elif self._gtk4:
             self.cpp_info.set_property("pkg_config_name", "gtk4")
             self.cpp_info.libs = ["gtk-4"]
