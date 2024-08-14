@@ -202,6 +202,7 @@ class GtkConan(ConanFile):
             self.cpp_info.components["gdk-3.0"].requires = []
             self.cpp_info.components["gdk-3.0"].requires.extend(["pango::pango_", "pango::pangocairo"])
             self.cpp_info.components["gdk-3.0"].requires.append("gdk-pixbuf::gdk-pixbuf")
+            self.cpp_info.components["gdk-3.0"].requires.append("fontconfig::fontconfig")
             if not is_msvc(self):
                 self.cpp_info.components["gdk-3.0"].requires.extend(["cairo::cairo", "cairo::cairo-gobject"])
             if self.settings.os in ["Linux", "FreeBSD"]:
