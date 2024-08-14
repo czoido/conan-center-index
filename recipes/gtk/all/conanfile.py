@@ -69,7 +69,7 @@ class GtkConan(ConanFile):
         else:
             if self.options.with_wayland or self.options.with_x11:
                 self.options["pango"].with_freetype = True
-        if is_apple_os(self):
+        if is_apple_os(self) or self._gtk3:
             self.options.rm_safe("with_vulkan")
 
         self.options["graphene"].with_glib = True
@@ -118,7 +118,7 @@ class GtkConan(ConanFile):
         self.requires("pango/1.52.0", transitive_headers=True, transitive_libs=True)
         if self.options.with_gstreamer:
             self.requires("gstreamer/1.22.6")
-        if self.options.get_safe("with_vulkan", False):
+        if self.options.get_safe("with_vulkan"):
             self.requires("vulkan-loader/1.3.239.0")
             self.tool_requires("shaderc/2023.6")
 
@@ -156,7 +156,6 @@ class GtkConan(ConanFile):
         tc = MesonToolchain(self)
         tc.project_options["wayland_backend" if self._gtk3 else "wayland-backend"] = "true" if self.options.get_safe("with_wayland") else "false"
         tc.project_options["x11_backend" if self._gtk3 else "x11-backend"] = "true" if self.options.get_safe("with_x11", False) else "false"
-        tc.project_options["vulkan"] = "enabled" if self.options.get_safe("with_vulkan") else "disabled"
         tc.project_options["introspection"] = "false" if self._gtk3 else "disabled"
         tc.project_options["gtk_doc"] = "false"
         tc.project_options["man-pages" if self._gtk4 else "man"] = "false"
@@ -166,10 +165,11 @@ class GtkConan(ConanFile):
         tc.project_options["datadir"] = os.path.join(self.package_folder, "res", "share")
         tc.project_options["localedir"] = os.path.join(self.package_folder, "res", "share", "locale")
         tc.project_options["sysconfdir"] = os.path.join(self.package_folder, "res", "etc")
+        if self.options.get_safe("with_vulkan") is not None:
+            tc.project_options["vulkan"] = "enabled" if self.options.get_safe("with_vulkan") else "disabled"
         if self._gtk4:
-            enabled_disabled = lambda opt: "enabled" if opt else "disabled"
-            tc.project_options["media-gstreamer"] = enabled_disabled(self.options.with_gstreamer)
-            tc.project_options["print-cups"] = enabled_disabled(self.options.with_cups)
+            tc.project_options["media-gstreamer"] = "enabled" if self.options.get_safe("with_gstreamer") else "disabled"
+            tc.project_options["print-cups"] = "enabled" if self.options.get_safe("with_cups") else "disabled"
         tc.generate()
 
         tc = PkgConfigDeps(self)
