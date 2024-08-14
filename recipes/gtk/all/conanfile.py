@@ -28,6 +28,7 @@ class GtkConan(ConanFile):
         "fPIC": [True, False],
         "with_wayland": [True, False],
         "with_x11": [True, False],
+        "with_vulkan": [True, False],
         "with_gstreamer": [True, False],
         "with_cups": [True, False],
         "with_cloudprint": [True, False],
@@ -37,6 +38,7 @@ class GtkConan(ConanFile):
         "fPIC": True,
         "with_wayland": False,
         "with_x11": True,
+        "with_vulkan": True,
         "with_gstreamer": False,
         "with_cups": False,
         "with_cloudprint": False,
@@ -67,6 +69,8 @@ class GtkConan(ConanFile):
         else:
             if self.options.with_wayland or self.options.with_x11:
                 self.options["pango"].with_freetype = True
+        if is_apple_os(self):
+            self.options.rm_safe("with_vulkan")
 
         self.options["graphene"].with_glib = True
 
@@ -114,7 +118,9 @@ class GtkConan(ConanFile):
         self.requires("pango/1.52.0", transitive_headers=True, transitive_libs=True)
         if self.options.with_gstreamer:
             self.requires("gstreamer/1.22.6")
-
+        if self.options.get_safe("with_vulkan", False):
+            self.requires("vulkan-loader/1.3.239.0")
+            self.tool_requires("shaderc/2023.6")
 
     def validate(self):
         if self.settings.compiler == "gcc" and Version(self.settings.compiler.version) < "5":
@@ -148,8 +154,9 @@ class GtkConan(ConanFile):
         VirtualRunEnv(self).generate(scope="build")
 
         tc = MesonToolchain(self)
-        tc.project_options["wayland_backend" if self._gtk3 else "wayland-backend"] = "true" if self.options.get_safe("with_wayland", False) else "false"
+        tc.project_options["wayland_backend" if self._gtk3 else "wayland-backend"] = "true" if self.options.get_safe("with_wayland") else "false"
         tc.project_options["x11_backend" if self._gtk3 else "x11-backend"] = "true" if self.options.get_safe("with_x11", False) else "false"
+        tc.project_options["vulkan"] = "enabled" if self.options.get_safe("with_vulkan") else "disabled"
         tc.project_options["introspection"] = "false" if self._gtk3 else "disabled"
         tc.project_options["gtk_doc"] = "false"
         tc.project_options["man-pages" if self._gtk4 else "man"] = "false"
