@@ -105,6 +105,7 @@ class OpenUSDConan(ConanFile):
         self.cpp_info.components["usd_geomUtil"].libs = ["usd_geomUtil"]
         self.cpp_info.components["usd_geomUtil"].requires = ["usd_arch", "usd_gf", "usd_tf", "usd_vt", "usd_pxOsd"]
 
+        # Check
         self.cpp_info.components["usd_gf"].libs = ["usd_gf"]
         self.cpp_info.components["usd_gf"].requires = ["usd_arch", "usd_tf"]
 
@@ -152,8 +153,9 @@ class OpenUSDConan(ConanFile):
         self.cpp_info.components["usd_hio"].libs = ["usd_hio"]
         self.cpp_info.components["usd_hio"].requires = ["usd_arch", "usd_js", "usd_plug", "usd_tf", "usd_vt", "usd_trace", "usd_ar", "usd_hf"]
 
+        # Check
         self.cpp_info.components["usd_js"].libs = ["usd_js"]
-        self.cpp_info.components["usd_js"].requires = ["usd_tf"]
+        self.cpp_info.components["usd_js"].requires = ["usd_tf", "usd_arch"]
 
         self.cpp_info.components["usd_kind"].libs = ["usd_kind"]
         self.cpp_info.components["usd_kind"].requires = ["usd_tf", "usd_plug"]
@@ -165,6 +167,7 @@ class OpenUSDConan(ConanFile):
         self.cpp_info.components["usd_pcp"].requires = ["usd_tf", "usd_trace", "usd_vt", "usd_sdf", "usd_work", "usd_ar"]
         self.cpp_info.components["usd_pcp"].requires.append("onetbb::libtbb")
 
+        # Check
         self.cpp_info.components["usd_pegtl"].libs = ["usd_pegtl"]
         self.cpp_info.components["usd_pegtl"].requires = ["usd_arch"]
 
@@ -181,12 +184,14 @@ class OpenUSDConan(ConanFile):
         self.cpp_info.components["usd_sdr"].libs = ["usd_sdr"]
         self.cpp_info.components["usd_sdr"].requires = ["usd_tf", "usd_vt", "usd_ar", "usd_ndr", "usd_sdf"]
 
+        # Check
         self.cpp_info.components["usd_tf"].libs = ["usd_tf"]
         self.cpp_info.components["usd_tf"].requires = ["usd_arch"]
         self.cpp_info.components["usd_tf"].requires.append("onetbb::libtbb")
 
+        # Check
         self.cpp_info.components["usd_trace"].libs = ["usd_trace"]
-        self.cpp_info.components["usd_trace"].requires = ["usd_arch", "usd_tf", "usd_js"]
+        self.cpp_info.components["usd_trace"].requires = ["usd_js", "usd_tf", "usd_arch"]
         self.cpp_info.components["usd_trace"].requires.append("onetbb::libtbb")
 
         self.cpp_info.components["usd_ts"].libs = ["usd_ts"]
@@ -281,6 +286,7 @@ class OpenUSDConan(ConanFile):
         self.cpp_info.components["usd_vt"].requires = ["usd_arch", "usd_tf", "usd_gf", "usd_trace"]
         self.cpp_info.components["usd_vt"].requires.append("onetbb::libtbb")
 
+        # Check
         self.cpp_info.components["usd_work"].libs = ["usd_work"]
-        self.cpp_info.components["usd_work"].requires = ["usd_tf", "usd_trace"]
+        self.cpp_info.components["usd_work"].requires = ["usd_trace", "usd_js", "usd_tf", "usd_arch"]
         self.cpp_info.components["usd_work"].requires.append("onetbb::libtbb")
