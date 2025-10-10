@@ -101,7 +101,7 @@ class OpenUSDConan(ConanFile):
         self.cpp_info.components["cameraUtil"].libs = ["usd_cameraUtil"]
         self.cpp_info.components["cameraUtil"].requires = ["gf", "tf", "arch"]
 
-        # TODO: INTERFACE_SYSTEM_INCLUDE_DIRECTORIES and INTERFACE_INCLUDE_DIRECTORIES??
+        # Check
         self.cpp_info.components["ef"].libs = ["usd_ef"]
         self.cpp_info.components["ef"].requires = ["vdf", "usd", "pcp", "sdf", "kind", "ar", "ts", "vt", "plug", "work", "trace", "js", "pegtl", "gf", "tf", "arch"]
         self.cpp_info.components["ef"].requires.append("onetbb::libtbb")
@@ -114,7 +114,7 @@ class OpenUSDConan(ConanFile):
         self.cpp_info.components["esfUsd"].libs = ["usd_esfUsd"]
         self.cpp_info.components["esfUsd"].requires = ["esf", "usd", "pcp", "sdf", "kind", "ar", "ts", "vt", "plug", "work", "trace", "js", "pegtl", "gf", "tf", "arch"]
 
-        # TODO: INTERFACE_SYSTEM_INCLUDE_DIRECTORIES and INTERFACE_INCLUDE_DIRECTORIES??
+        # Check
         self.cpp_info.components["exec"].libs = ["usd_exec"]
         self.cpp_info.components["exec"].requires = ["esf", "ef", "vdf", "usd", "pcp", "sdf", "kind", "ar", "ts", "vt", "plug", "work", "trace", "js", "pegtl", "gf", "tf", "arch"]
         self.cpp_info.components["exec"].requires.append("onetbb::libtbb")
@@ -371,7 +371,7 @@ class OpenUSDConan(ConanFile):
         self.cpp_info.components["usdVolImaging"].libs = ["usd_usdVolImaging"]
         self.cpp_info.components["usdVolImaging"].requires = ["usdImaging", "hdar", "hd", "geomUtil", "pxOsd", "cameraUtil", "hio", "hf", "usdRender", "usdLux", "usdShade", "usdVol", "usdGeom", "usd", "pcp", "sdr", "sdf", "kind", "ar", "ts", "vt", "plug", "work", "trace", "js", "pegtl", "gf", "tf", "arch"]
 
-        # TODO: INTERFACE_SYSTEM_INCLUDE_DIRECTORIES and INTERFACE_INCLUDE_DIRECTORIES??
+        # Check
         self.cpp_info.components["vdf"].libs = ["usd_vdf"]
         self.cpp_info.components["vdf"].requires = ["vt", "work", "trace", "js", "gf", "tf", "arch"]
         self.cpp_info.components["vdf"].requires.append("onetbb::libtbb")
