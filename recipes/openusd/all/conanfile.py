@@ -61,17 +61,13 @@ class OpenUSDConan(ConanFile):
         tc.cache_variables["PXR_USE_DEBUG_PYTHON"] = False
         tc.cache_variables["PXR_BUILD_USD_TOOLS"] = False
 
-
-        tc.cache_variables["OPENSUBDIV_LIBRARIES"] = "OpenSubdiv::osdcpu"
-        tc.cache_variables["OPENSUBDIV_INCLUDE_DIR"] = self.dependencies['opensubdiv'].cpp_info.includedirs[0].replace("\\", "/")
-        target_suffix = "" if self.dependencies["opensubdiv"].options.shared else "_static"
-        tc.cache_variables["OPENSUBDIV_OSDCPU_LIBRARY"] = "OpenSubdiv::osdcpu"+target_suffix
         tc.cache_variables["TBB_tbb_LIBRARY"] = "TBB::tbb"
         tc.generate()
 
         tc = CMakeDeps(self)
-        tc.set_property("opensubdiv::osdcpu", "cmake_target_name", "OpenSubdiv::osdcpu")
-        tc.set_property("opensubdiv::osdcpu", "cmake_target_aliases", ["OpenSubdiv::osdcpu_static"])
+        subdiv_suffix = "" if self.dependencies["opensubdiv"].options.shared else "_static"
+        tc.set_property("opensubdiv::osdcpu", "cmake_target_name", f"OpenSubdiv::osdCPU{subdiv_suffix}")
+        tc.set_property("opensubdiv::osdgpu", "cmake_target_name", f"OpenSubdiv::osdGPU{subdiv_suffix}")
         tc.generate()
 
     def build(self):

@@ -17,15 +17,15 @@ PXR_NAMESPACE_USING_DIRECTIVE
 int main(int argc, char *argv[]) {
   UsdStageRefPtr stage = UsdStage::CreateNew("HelloWorld.usda");
 
-  // UsdGeomSetStageUpAxis(stage, UsdGeomTokens->y);
-  // UsdGeomSetStageMetersPerUnit(stage, 0.01);
-  //
-  // // create mesh
-  // UsdGeomXform xform = UsdGeomXform::Define(stage, SdfPath("/root"));
-  // UsdGeomMesh mesh = UsdGeomMesh::Define(stage, SdfPath("/root/mesh"));
-  // stage->SetDefaultPrim(xform.GetPrim());
+   UsdGeomSetStageUpAxis(stage, UsdGeomTokens->y);
+   UsdGeomSetStageMetersPerUnit(stage, 0.01);
 
-  // stage->GetRootLayer()->Save();
+   // create mesh
+   UsdGeomXform xform = UsdGeomXform::Define(stage, SdfPath("/root"));
+   UsdGeomMesh mesh = UsdGeomMesh::Define(stage, SdfPath("/root/mesh"));
+   stage->SetDefaultPrim(xform.GetPrim());
+
+   stage->GetRootLayer()->Save();
 
   return EXIT_SUCCESS;
 }
