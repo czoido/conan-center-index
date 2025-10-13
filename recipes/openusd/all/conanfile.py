@@ -37,7 +37,7 @@ class OpenUSDConan(ConanFile):
         self.requires("opensubdiv/3.6.0")
         self.requires("opengl/system")
         if self.options.with_openimageio:
-            self.requires("openimageio/2.5.14.0")
+            self.requires("openimageio/2.5.19.1")
         if self.options.with_materialx:
             self.requires("materialx/1.39.1")
 
