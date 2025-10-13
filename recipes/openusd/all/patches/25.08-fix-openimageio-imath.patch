@@ -1,0 +1,18 @@
+--- a/pxr/imaging/plugin/hioOiio/CMakeLists.txt
++++ b/pxr/imaging/plugin/hioOiio/CMakeLists.txt
+@@ -7,6 +7,7 @@ if (NOT ${PXR_BUILD_GPU_SUPPORT})
+     return()
+ endif()
+ 
++if(0)
+ # Use the import targets set by Imath's package config
+ if (Imath_FOUND)
+     set(__OIIO_IMATH_LIBS "Imath::Imath")
+@@ -14,6 +15,7 @@ else()
+     set(__OIIO_IMATH_INCLUDE ${OPENEXR_INCLUDE_DIRS})
+     set(__OIIO_IMATH_LIBS ${OPENEXR_LIBRARIES})
+ endif()
++endif()
+ 
+ pxr_plugin(hioOiio
+     LIBRARIES
