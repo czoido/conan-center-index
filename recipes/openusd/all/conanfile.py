@@ -46,11 +46,6 @@ class OpenUSDConan(ConanFile):
 
     def validate(self):
         check_min_cppstd(self, 17)
-        # Require same options as in https://github.com/PixarAnimationStudios/OpenUSD/blob/release/build_scripts/build_usd.py#L1450
-        if not self.dependencies["opensubdiv"].options.with_tbb:
-            raise ConanInvalidConfiguration('openusd requires -o "opensubdiv/*:with_tbb=True"')
-        if not self.dependencies["opensubdiv"].options.with_opengl:
-            raise ConanInvalidConfiguration('openusd requires -o "opensubdiv/*:with_opengl=True"')
         if self.options.with_materialx and not self.dependencies["materialx"].options.shared:
             raise ConanInvalidConfiguration('openusd requires -o "materialx/*:shared=True"')
 
