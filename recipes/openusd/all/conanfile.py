@@ -5,7 +5,7 @@ from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 from conan.tools.files import copy, get, rm, rmdir, apply_conandata_patches, export_conandata_patches
 import os
-
+# mirror
 required_conan_version = ">=2.1"
 
 class OpenUSDConan(ConanFile):
