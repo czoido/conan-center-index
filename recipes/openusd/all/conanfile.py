@@ -104,6 +104,11 @@ class OpenUSDConan(ConanFile):
         rmdir(self, os.path.join(self.package_folder, "cmake"))
 
     def package_info(self):
+        def _add_library(name):
+            self.cpp_info.components[name].libs = [f"usd_{name}"]
+            return self.cpp_info.components[name]
+
+
         if self.settings.os in ["Linux", "FreeBSD"]:
             self.cpp_info.system_libs.extend(["m", "pthread", "dl"])
 
@@ -111,160 +116,62 @@ class OpenUSDConan(ConanFile):
 
         self.cpp_info.components["arch"].libs = ["usd_arch"]
 
-        self.cpp_info.components["tf"].libs = ["usd_tf"]
-        self.cpp_info.components["tf"].requires = ["arch", "onetbb::libtbb"]
-
-        self.cpp_info.components["gf"].libs = ["usd_gf"]
-        self.cpp_info.components["gf"].requires = ["arch", "tf"]
-
-        self.cpp_info.components["pegtl"].libs = ["usd_pegtl"]
-        self.cpp_info.components["pegtl"].requires = ["arch"]
-
-        self.cpp_info.components["js"].libs = ["usd_js"]
-        self.cpp_info.components["js"].requires = ["tf"]
-
-        self.cpp_info.components["trace"].libs = ["usd_trace"]
-        self.cpp_info.components["trace"].requires = ["arch", "js", "tf", "onetbb::libtbb"]
-
-        self.cpp_info.components["work"].libs = ["usd_work"]
-        self.cpp_info.components["work"].requires = ["tf", "trace", "onetbb::libtbb"]
-
-        self.cpp_info.components["plug"].libs = ["usd_plug"]
-        self.cpp_info.components["plug"].requires = ["arch", "tf", "js", "trace", "work", "onetbb::libtbb"]
-
-        self.cpp_info.components["vt"].libs = ["usd_vt"]
-        self.cpp_info.components["vt"].requires = ["arch", "tf", "gf", "trace", "onetbb::libtbb"]
-
-        self.cpp_info.components["ts"].libs = ["usd_ts"]
-        self.cpp_info.components["ts"].requires = ["vt", "gf", "tf"]
-
-        self.cpp_info.components["ar"].libs = ["usd_ar"]
-        self.cpp_info.components["ar"].requires = ["arch", "js", "tf", "plug", "vt", "onetbb::libtbb"]
-
-        self.cpp_info.components["kind"].libs = ["usd_kind"]
-        self.cpp_info.components["kind"].requires = ["tf", "plug"]
-
-        self.cpp_info.components["sdf"].libs = ["usd_sdf"]
-        self.cpp_info.components["sdf"].requires = ["arch", "tf", "gf", "pegtl", "trace", "ts", "vt", "work", "ar", "onetbb::libtbb"]
-
-        self.cpp_info.components["sdr"].libs = ["usd_sdr"]
-        self.cpp_info.components["sdr"].requires = ["arch", "plug", "trace", "tf", "vt", "work", "ar", "sdf"]
-
-        self.cpp_info.components["pcp"].libs = ["usd_pcp"]
-        self.cpp_info.components["pcp"].requires = ["tf", "trace", "vt", "sdf", "work", "ar", "onetbb::libtbb"]
-
-        self.cpp_info.components["usd"].libs = ["usd_usd"]
-        self.cpp_info.components["usd"].requires = ["arch", "kind", "pcp", "sdf", "ar", "plug", "tf", "trace", "ts", "vt", "work", "onetbb::libtbb"]
-
-        self.cpp_info.components["usdGeom"].libs = ["usd_usdGeom"]
-        self.cpp_info.components["usdGeom"].requires = ["js", "tf", "plug", "vt", "sdf", "trace", "usd", "work", "onetbb::libtbb"]
-
-        self.cpp_info.components["usdVol"].libs = ["usd_usdVol"]
-        self.cpp_info.components["usdVol"].requires = ["tf", "usd", "usdGeom"]
-
-        self.cpp_info.components["usdMedia"].libs = ["usd_usdMedia"]
-        self.cpp_info.components["usdMedia"].requires = ["tf", "vt", "sdf", "usd", "usdGeom"]
-
-        self.cpp_info.components["usdShade"].libs = ["usd_usdShade"]
-        self.cpp_info.components["usdShade"].requires = ["tf", "vt", "js", "sdf", "sdr", "usd", "usdGeom", "onetbb::libtbb"]
-
-        self.cpp_info.components["usdLux"].libs = ["usd_usdLux"]
-        self.cpp_info.components["usdLux"].requires = ["tf", "vt", "sdf", "sdr", "usd", "usdGeom", "usdShade"]
-
-        self.cpp_info.components["usdProc"].libs = ["usd_usdProc"]
-        self.cpp_info.components["usdProc"].requires = ["tf", "usd", "usdGeom"]
-
-        self.cpp_info.components["usdRender"].libs = ["usd_usdRender"]
-        self.cpp_info.components["usdRender"].requires = ["gf", "tf", "usd", "usdGeom", "usdShade"]
-
-        self.cpp_info.components["usdHydra"].libs = ["usd_usdHydra"]
-        self.cpp_info.components["usdHydra"].requires = ["tf", "usd", "usdShade"]
-
-        self.cpp_info.components["usdRi"].libs = ["usd_usdRi"]
-        self.cpp_info.components["usdRi"].requires = ["tf", "vt", "sdf", "usd", "usdShade", "usdGeom"]
-
-        self.cpp_info.components["usdSemantics"].libs = ["usd_usdSemantics"]
-        self.cpp_info.components["usdSemantics"].requires = ["tf", "vt", "usd"]
-
-        self.cpp_info.components["usdSkel"].libs = ["usd_usdSkel"]
-        self.cpp_info.components["usdSkel"].requires = ["arch", "gf", "tf", "trace", "vt", "work", "sdf", "usd", "usdGeom", "onetbb::libtbb"]
-
-        self.cpp_info.components["usdUI"].libs = ["usd_usdUI"]
-        self.cpp_info.components["usdUI"].requires = ["tf", "vt", "sdf", "usd"]
-
-        self.cpp_info.components["usdUtils"].libs = ["usd_usdUtils"]
-        self.cpp_info.components["usdUtils"].requires = ["arch", "tf", "gf", "sdf", "usd", "usdGeom", "usdShade", "onetbb::libtbb"]
-
-        self.cpp_info.components["usdPhysics"].libs = ["usd_usdPhysics"]
-        self.cpp_info.components["usdPhysics"].requires = ["tf", "plug", "vt", "sdf", "trace", "usd", "usdGeom", "usdShade", "work"]
-
-        self.cpp_info.components["vdf"].libs = ["usd_vdf"]
-        self.cpp_info.components["vdf"].requires = ["arch", "gf", "tf", "trace", "vt", "work", "onetbb::libtbb"]
-
-        self.cpp_info.components["ef"].libs = ["usd_ef"]
-        self.cpp_info.components["ef"].requires = ["vdf", "arch", "tf", "trace", "usd", "work", "onetbb::libtbb"]
-
-        self.cpp_info.components["esf"].libs = ["usd_esf"]
-        self.cpp_info.components["esf"].requires = ["arch", "sdf", "tf", "vt", "usd"]
-
-        self.cpp_info.components["esfUsd"].libs = ["usd_esfUsd"]
-        self.cpp_info.components["esfUsd"].requires = ["arch", "esf", "tf", "sdf", "usd"]
-
-        self.cpp_info.components["exec"].libs = ["usd_exec"]
-        self.cpp_info.components["exec"].requires = ["ef", "esf", "tf", "trace", "ts", "sdf", "usd", "vdf", "vt", "onetbb::libtbb"]
-
-        self.cpp_info.components["execUsd"].libs = ["usd_execUsd"]
-        self.cpp_info.components["execUsd"].requires = ["esf", "esfUsd", "exec", "tf", "trace", "sdf", "usd"]
-
-        self.cpp_info.components["execGeom"].libs = ["usd_execGeom"]
-        self.cpp_info.components["execGeom"].requires = ["gf", "tf", "execUsd", "usdGeom"]
-
-        self.cpp_info.components["usdValidation"].libs = ["usd_usdValidation"]
-        self.cpp_info.components["usdValidation"].requires = ["sdf", "plug", "tf", "gf", "usd", "work"]
-
-        self.cpp_info.components["usdGeomValidators"].libs = ["usd_usdGeomValidators"]
-        self.cpp_info.components["usdGeomValidators"].requires = ["tf", "plug", "sdf", "usd", "usdGeom", "usdValidation"]
-
-        self.cpp_info.components["usdPhysicsValidators"].libs = ["usd_usdPhysicsValidators"]
-        self.cpp_info.components["usdPhysicsValidators"].requires = ["tf", "plug", "sdf", "usd", "usdGeom", "usdPhysics", "usdValidation"]
-
-        self.cpp_info.components["usdShadeValidators"].libs = ["usd_usdShadeValidators"]
-        self.cpp_info.components["usdShadeValidators"].requires = ["tf", "plug", "sdf", "usd", "sdr", "usdShade", "usdValidation"]
-
-        self.cpp_info.components["usdSkelValidators"].libs = ["usd_usdSkelValidators"]
-        self.cpp_info.components["usdSkelValidators"].requires = ["tf", "plug", "sdf", "usd", "usdSkel", "usdValidation"]
-
-        self.cpp_info.components["usdUtilsValidators"].libs = ["usd_usdUtilsValidators"]
-        self.cpp_info.components["usdUtilsValidators"].requires = ["tf", "plug", "sdf", "usd", "usdUtils", "usdValidation"]
+        _add_library("tf").requires = ["arch", "onetbb::libtbb"]
+        _add_library("gf").requires = ["arch", "tf"]
+        _add_library("pegtl").requires = ["arch"]
+        _add_library("js").requires = ["tf"]
+        _add_library("trace").requires = ["arch", "js", "tf", "onetbb::libtbb"]
+        _add_library("work").requires = ["tf", "trace", "onetbb::libtbb"]
+        _add_library("plug").requires = ["arch", "tf", "js", "trace", "work", "onetbb::libtbb"]
+        _add_library("vt").requires = ["arch", "tf", "gf", "trace", "onetbb::libtbb"]
+        _add_library("ts").requires = ["vt", "gf", "tf"]
+        _add_library("ar").requires = ["arch", "js", "tf", "plug", "vt", "onetbb::libtbb"]
+        _add_library("kind").requires = ["tf", "plug"]
+        _add_library("sdf").requires = ["arch", "tf", "gf", "pegtl", "trace", "ts", "vt", "work", "ar", "onetbb::libtbb"]
+        _add_library("sdr").requires = ["arch", "plug", "trace", "tf", "vt", "work", "ar", "sdf"]
+        _add_library("pcp").requires = ["tf", "trace", "vt", "sdf", "work", "ar", "onetbb::libtbb"]
+        _add_library("usd").requires = ["arch", "kind", "pcp", "sdf", "ar", "plug", "tf", "trace", "ts", "vt", "work", "onetbb::libtbb"]
+        _add_library("usdGeom").requires = ["js", "tf", "plug", "vt", "sdf", "trace", "usd", "work", "onetbb::libtbb"]
+        _add_library("usdVol").requires = ["usd", "sdf", "tf", "trace"]
+        _add_library("usdMedia").requires = ["tf", "vt", "sdf", "usd", "usdGeom"]
+        _add_library("usdShade").requires = ["tf", "vt", "js", "sdf", "sdr", "usd", "usdGeom", "onetbb::libtbb"]
+        _add_library("usdLux").requires = ["tf", "vt", "sdf", "sdr", "usd", "usdGeom", "usdShade"]
+        _add_library("usdProc").requires = ["tf", "usd", "usdGeom"]
+        _add_library("usdRender").requires = ["gf", "tf", "usd", "usdGeom", "usdShade"]
+        _add_library("usdHydra").requires = ["tf", "usd", "usdShade"]
+        _add_library("usdRi").requires = ["tf", "vt", "sdf", "usd", "usdShade", "usdGeom"]
+        _add_library("usdSemantics").requires = ["tf", "vt", "sdf", "usd", "usdGeom"]
+        _add_library("usdSkel").requires = ["arch", "gf", "tf", "trace", "vt", "work", "sdf", "usd", "usdGeom", "onetbb::libtbb"]
+        _add_library("usdUI").requires = ["tf", "vt", "sdf", "usd"]
+        _add_library("usdUtils").requires = ["arch", "tf", "gf", "sdf", "usd", "usdGeom", "usdShade", "onetbb::libtbb"]
+        _add_library("usdPhysics").requires = ["tf", "plug", "vt", "sdf", "trace", "usd", "usdGeom", "usdShade", "work"]
+        _add_library("vdf").requires = ["arch", "gf", "tf", "trace", "vt", "work", "onetbb::libtbb"]
+        _add_library("ef").requires = ["vdf", "arch", "tf", "trace", "usd", "work", "onetbb::libtbb"]
+        _add_library("esf").requires = ["arch", "sdf", "tf", "vt", "usd"]
+        _add_library("esfUsd").requires = ["arch", "esf", "tf", "sdf", "usd"]
+        _add_library("exec").requires = ["ef", "esf", "tf", "trace", "ts", "sdf", "usd", "vdf", "vt", "onetbb::libtbb"]
+        _add_library("execUsd").requires = ["esf", "esfUsd", "exec", "tf", "trace", "sdf", "usd"]
+        _add_library("execGeom").requires = ["gf", "tf", "execUsd", "usdGeom"]
+        _add_library("usdValidation").requires = ["sdf", "plug", "tf", "gf", "usd", "work"]
+        _add_library("usdGeomValidators").requires = ["tf", "plug", "sdf", "usd", "usdGeom", "usdValidation"]
+        _add_library("usdPhysicsValidators").requires = ["tf", "plug", "sdf", "usd", "usdGeom", "usdPhysics", "usdValidation"]
+        _add_library("usdShadeValidators").requires = ["tf", "plug", "sdf", "usd", "sdr", "usdShade", "usdValidation"]
+        _add_library("usdSkelValidators").requires = ["tf", "plug", "sdf", "usd", "usdSkel", "usdValidation"]
+        _add_library("usdUtilsValidators").requires = ["tf", "plug", "sdf", "usd", "usdUtils", "usdValidation"]
 
         self.cpp_info.components["garch"].libs = ["usd_garch"]
         self.cpp_info.components["garch"].requires = ["arch", "tf", "opengl::opengl"]
         if is_apple_os(self):
             self.cpp_info.components["garch"].frameworks = ["Foundation", kit_framework]
 
-        self.cpp_info.components["hf"].libs = ["usd_hf"]
-        self.cpp_info.components["hf"].requires = ["plug", "tf", "trace"]
-
-        self.cpp_info.components["hio"].libs = ["usd_hio"]
-        self.cpp_info.components["hio"].requires = ["arch", "js", "plug", "tf", "vt", "trace", "ar", "hf"]
-
-        self.cpp_info.components["cameraUtil"].libs = ["usd_cameraUtil"]
-        self.cpp_info.components["cameraUtil"].requires = ["tf", "gf"]
-
-        self.cpp_info.components["pxOsd"].libs = ["usd_pxOsd"]
-        self.cpp_info.components["pxOsd"].requires = ["tf", "gf", "vt", "opensubdiv::osdcpu"]
-
-        self.cpp_info.components["geomUtil"].libs = ["usd_geomUtil"]
-        self.cpp_info.components["geomUtil"].requires = ["arch", "gf", "tf", "vt", "pxOsd"]
-
-        self.cpp_info.components["glf"].libs = ["usd_glf"]
-        self.cpp_info.components["glf"].requires = ["ar", "arch", "garch", "gf", "hf", "hio", "plug", "tf", "trace", "sdf"]
-
-        self.cpp_info.components["hgi"].libs = ["usd_hgi"]
-        self.cpp_info.components["hgi"].requires = ["gf", "plug", "tf", "hio"]
-
-        self.cpp_info.components["hgiGL"].libs = ["usd_hgiGL"]
-        self.cpp_info.components["hgiGL"].requires = ["arch", "garch", "hf", "hgi", "tf", "trace"]
+        _add_library("hf").requires = ["plug", "tf", "trace"]
+        _add_library("hio").requires = ["arch", "js", "plug", "tf", "vt", "trace", "ar", "hf"]
+        _add_library("cameraUtil").requires = ["tf", "gf"]
+        _add_library("pxOsd").requires = ["tf", "gf", "vt", "opensubdiv::osdcpu"]
+        _add_library("geomUtil").requires = ["arch", "gf", "tf", "vt", "pxOsd"]
+        _add_library("glf").requires = ["ar", "arch", "garch", "gf", "hf", "hio", "plug", "tf", "trace", "sdf"]
+        _add_library("hgi").requires = ["gf", "plug", "tf", "hio"]
+        _add_library("hgiGL").requires = ["arch", "garch", "hf", "hgi", "tf", "trace"]
 
         if is_apple_os(self):
             self.cpp_info.components["hgiMetal"].libs = ["usd_hgiMetal"]
@@ -277,56 +184,30 @@ class OpenUSDConan(ConanFile):
             self.cpp_info.components["hgiInterop"].frameworks = ["Foundation", "CoreVideo"]
             self.cpp_info.components["hgiInterop"].requires.append("hgiMetal")
 
-        self.cpp_info.components["hd"].libs = ["usd_hd"]
-        self.cpp_info.components["hd"].requires = ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil", "hf", "pxOsd", "sdr", "onetbb::libtbb"]
-
-        self.cpp_info.components["hdar"].libs = ["usd_hdar"]
-        self.cpp_info.components["hdar"].requires = ["hd", "ar"]
-
-        self.cpp_info.components["hdGp"].libs = ["usd_hdGp"]
-        self.cpp_info.components["hdGp"].requires = ["hd", "hf", "onetbb::libtbb"]
-
-        self.cpp_info.components["hdsi"].libs = ["usd_hdsi"]
-        self.cpp_info.components["hdsi"].requires = ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil", "geomUtil", "hf", "hd", "pxOsd", "onetbb::libtbb"]
+        _add_library("hd").requires = ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil", "hf", "pxOsd", "sdr", "onetbb::libtbb"]
+        _add_library("hdar").requires = ["hd", "ar"]
+        _add_library("hdGp").requires = ["hd", "hf", "onetbb::libtbb"]
+        _add_library("hdsi").requires = ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil", "geomUtil", "hf", "hd", "pxOsd", "onetbb::libtbb"]
 
         self.cpp_info.components["hdSt"].libs = ["usd_hdSt"]
         self.cpp_info.components["hdSt"].requires = ["hio", "garch", "glf", "hd", "hdsi", "hgiGL", "hgiInterop", "sdr", "tf", "trace", "onetbb::libtbb", "opensubdiv::osdcpu", "opensubdiv::osdgpu"]
         if self.options.with_materialx:
             self.cpp_info.components["hdSt"].requires = ["hdMtlx", "materialx::MaterialXGenShader", "materialx::MaterialXRender", "materialx::MaterialXCore", "materialx::MaterialXFormat",
                                                          "materialx::MaterialXGenGlsl", "materialx::MaterialXGenMsl"]
-        self.cpp_info.components["hdx"].libs = ["usd_hdx"]
-        self.cpp_info.components["hdx"].requires = ["plug", "tf", "vt", "gf", "work", "garch", "glf", "pxOsd", "hd", "hdSt", "hgi", "hgiInterop", "cameraUtil", "sdf"]
+        _add_library("hdx").requires = ["plug", "tf", "vt", "gf", "work", "garch", "glf", "pxOsd", "hd", "hdSt", "hgi", "hgiInterop", "cameraUtil", "sdf"]
 
         if self.options.with_materialx:
-            self.cpp_info.components["usdMtlx"].libs = ["usd_usdMtlx"]
-            self.cpp_info.components["usdMtlx"].requires = ["arch", "gf", "sdf", "sdr", "tf", "vt", "usd", "usdGeom", "usdShade", "usdUI", "usdUtils", "materialx::MaterialXCore", "materialx::MaterialXFormat"]
+            _add_library("usdMtlx").requires = ["arch", "gf", "sdf", "sdr", "tf", "vt", "usd", "usdGeom", "usdShade", "usdUI", "usdUtils", "materialx::MaterialXCore", "materialx::MaterialXFormat"]
+            _add_library("hdMtlx").requires = ["gf", "hd", "sdf", "sdr", "tf", "trace", "usdMtlx", "vt", "materialx::MaterialXCore", "materialx::MaterialXFormat"]
+            _add_library("usdBakeMtlx").requires = ["tf", "sdr", "usdMtlx", "usdShade", "hd", "hdMtlx", "usdImaging", "materialx::MaterialXCore", "materialx::MaterialXFormat", "materialx::MaterialXRenderGlsl"]
 
-            self.cpp_info.components["hdMtlx"].libs = ["usd_hdMtlx"]
-            self.cpp_info.components["hdMtlx"].requires = ["gf", "hd", "sdf", "sdr", "tf", "trace", "usdMtlx", "vt", "materialx::MaterialXCore", "materialx::MaterialXFormat"]
-
-            self.cpp_info.components["usdBakeMtlx"].libs = ["usd_usdBakeMtlx"]
-            self.cpp_info.components["usdBakeMtlx"].requires = ["tf", "sdr", "usdMtlx", "usdShade", "hd", "hdMtlx", "usdImaging", "materialx::MaterialXCore", "materialx::MaterialXFormat", "materialx::MaterialXRenderGlsl"]
-
-        self.cpp_info.components["usdImaging"].libs = ["usd_usdImaging"]
-        self.cpp_info.components["usdImaging"].requires = ["gf", "tf", "plug", "trace", "vt", "work", "geomUtil", "hd", "hdar", "hio", "pxOsd", "sdf", "usd", "usdGeom", "usdLux", "usdRender", "usdShade", "usdVol", "ar", "onetbb::libtbb"]
-
-        self.cpp_info.components["usdImagingGL"].libs = ["usd_usdImagingGL"]
-        self.cpp_info.components["usdImagingGL"].requires = ["gf", "tf", "plug", "trace", "vt", "work", "hio", "garch", "glf", "hd", "hdsi", "hdx", "pxOsd", "sdf", "sdr", "usd", "usdGeom", "usdHydra", "usdShade", "usdImaging", "ar"]
-
-        self.cpp_info.components["usdProcImaging"].libs = ["usd_usdProcImaging"]
-        self.cpp_info.components["usdProcImaging"].requires = ["usdImaging", "usdProc"]
-
-        self.cpp_info.components["usdRiPxrImaging"].libs = ["usd_usdRiPxrImaging"]
-        self.cpp_info.components["usdRiPxrImaging"].requires = ["gf", "tf", "plug", "trace", "vt", "work", "hd", "pxOsd", "sdf", "usd", "usdGeom", "usdLux", "usdShade", "usdImaging", "usdVol", "ar"]
-
-        self.cpp_info.components["usdSkelImaging"].libs = ["usd_usdSkelImaging"]
-        self.cpp_info.components["usdSkelImaging"].requires = ["hio", "hd", "usdImaging", "usdSkel"]
-
-        self.cpp_info.components["usdVolImaging"].libs = ["usd_usdVolImaging"]
-        self.cpp_info.components["usdVolImaging"].requires = ["usdImaging"]
-
-        self.cpp_info.components["usdAppUtils"].libs = ["usd_usdAppUtils"]
-        self.cpp_info.components["usdAppUtils"].requires = ["garch", "gf", "hio", "sdf", "tf", "usd", "usdGeom", "usdImagingGL"]
+        _add_library("usdImaging").requires = ["gf", "tf", "plug", "trace", "vt", "work", "geomUtil", "hd", "hdar", "hio", "pxOsd", "sdf", "usd", "usdGeom", "usdLux", "usdRender", "usdShade", "usdVol", "ar", "onetbb::libtbb"]
+        _add_library("usdImagingGL").requires = ["gf", "tf", "plug", "trace", "vt", "work", "hio", "garch", "glf", "hd", "hdsi", "hdx", "pxOsd", "sdf", "sdr", "usd", "usdGeom", "usdHydra", "usdShade", "usdImaging", "ar"]
+        _add_library("usdProcImaging").requires = ["usdImaging", "usdProc"]
+        _add_library("usdRiPxrImaging").requires = ["gf", "tf", "plug", "trace", "vt", "work", "hd", "pxOsd", "sdf", "usd", "usdGeom", "usdLux", "usdShade", "usdImaging", "usdVol", "ar"]
+        _add_library("usdSkelImaging").requires = ["hio", "hd", "usdImaging", "usdSkel"]
+        _add_library("usdVolImaging").requires = ["usdImaging"]
+        _add_library("usdAppUtils").requires = ["garch", "gf", "hio", "sdf", "tf", "usd", "usdGeom", "usdImagingGL"]
 
         # Plugins
         plugin_suffix = {
