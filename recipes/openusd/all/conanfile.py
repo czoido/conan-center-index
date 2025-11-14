@@ -48,6 +48,8 @@ class OpenUSDConan(ConanFile):
         check_min_cppstd(self, 17)
         if self.options.with_materialx and not self.dependencies["materialx"].options.shared:
             raise ConanInvalidConfiguration('openusd requires -o "materialx/*:shared=True"')
+        if self.settings.os == "Windows":
+            raise ConanInvalidConfiguration('Windows not supported contributions are welcome')
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
