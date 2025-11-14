@@ -106,7 +106,7 @@ class OpenUSDConan(ConanFile):
     def package_info(self):
         def _add_library(name):
             self.cpp_info.components[name].libs = [f"usd_{name}"]
-            if self.settings.os != "Windows":
+            if self.settings.os == "Windows":
                 self.cpp_info.components[name].bindirs = ["lib"]
             return self.cpp_info.components[name]
 
@@ -211,6 +211,8 @@ class OpenUSDConan(ConanFile):
 
         # Plugins
         plugin_suffix = {
+            # Windows searches for libname without lib prefix, which works for the plugin naming scheme,
+            # No need to declare the extensions and force a specific file name then as with the other OSs
             "Windows": "",
             "Linux": ".so",
             "Macos": ".dylib"
