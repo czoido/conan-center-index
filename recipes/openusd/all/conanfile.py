@@ -48,8 +48,6 @@ class OpenUSDConan(ConanFile):
         check_min_cppstd(self, 17)
         if self.options.with_materialx and not self.dependencies["materialx"].options.shared:
             raise ConanInvalidConfiguration('openusd requires -o "materialx/*:shared=True"')
-        if self.settings.os == "Windows":
-            raise ConanInvalidConfiguration('Windows not supported contributions are welcome')
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
@@ -108,16 +106,16 @@ class OpenUSDConan(ConanFile):
     def package_info(self):
         def _add_library(name):
             self.cpp_info.components[name].libs = [f"usd_{name}"]
+            if self.settings.os != "Windows":
+                self.cpp_info.components[name].bindirs = ["lib"]
             return self.cpp_info.components[name]
-
 
         if self.settings.os in ["Linux", "FreeBSD"]:
             self.cpp_info.system_libs.extend(["m", "pthread", "dl"])
 
         kit_framework = "AppKit" if self.settings.os == "Macos" else "UIKit"
 
-        self.cpp_info.components["arch"].libs = ["usd_arch"]
-
+        _add_library("arch")
         _add_library("tf").requires = ["arch", "onetbb::libtbb"]
         _add_library("gf").requires = ["arch", "tf"]
         _add_library("pegtl").requires = ["arch"]
@@ -161,10 +159,10 @@ class OpenUSDConan(ConanFile):
         _add_library("usdSkelValidators").requires = ["tf", "plug", "sdf", "usd", "usdSkel", "usdValidation"]
         _add_library("usdUtilsValidators").requires = ["tf", "plug", "sdf", "usd", "usdUtils", "usdValidation"]
 
-        self.cpp_info.components["garch"].libs = ["usd_garch"]
-        self.cpp_info.components["garch"].requires = ["arch", "tf", "opengl::opengl"]
+        garch = _add_library("garch")
+        garch.requires = ["arch", "tf", "opengl::opengl"]
         if is_apple_os(self):
-            self.cpp_info.components["garch"].frameworks = ["Foundation", kit_framework]
+            garch.frameworks = ["Foundation", kit_framework]
 
         _add_library("hf").requires = ["plug", "tf", "trace"]
         _add_library("hio").requires = ["arch", "js", "plug", "tf", "vt", "trace", "ar", "hf"]
@@ -176,25 +174,25 @@ class OpenUSDConan(ConanFile):
         _add_library("hgiGL").requires = ["arch", "garch", "hf", "hgi", "tf", "trace"]
 
         if is_apple_os(self):
-            self.cpp_info.components["hgiMetal"].libs = ["usd_hgiMetal"]
-            self.cpp_info.components["hgiMetal"].requires = ["arch", "hgi", "tf", "trace"]
-            self.cpp_info.components["hgiMetal"].frameworks = ["Foundation", "Metal", kit_framework]
+            hgiMetal = _add_library("hgiMetal")
+            hgiMetal.requires = ["arch", "hgi", "tf", "trace"]
+            hgiMetal.frameworks = ["Foundation", "Metal", kit_framework]
 
-        self.cpp_info.components["hgiInterop"].libs = ["usd_hgiInterop"]
-        self.cpp_info.components["hgiInterop"].requires = ["gf", "tf", "hgi", "vt", "garch"]
+        hgiInterop = _add_library("hgiInterop")
+        hgiInterop.requires = ["gf", "tf", "hgi", "vt", "garch"]
         if is_apple_os(self):
-            self.cpp_info.components["hgiInterop"].frameworks = ["Foundation", "CoreVideo"]
-            self.cpp_info.components["hgiInterop"].requires.append("hgiMetal")
+            hgiInterop.frameworks = ["Foundation", "CoreVideo"]
+            hgiInterop.requires.append("hgiMetal")
 
         _add_library("hd").requires = ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil", "hf", "pxOsd", "sdr", "onetbb::libtbb"]
         _add_library("hdar").requires = ["hd", "ar"]
         _add_library("hdGp").requires = ["hd", "hf", "onetbb::libtbb"]
         _add_library("hdsi").requires = ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil", "geomUtil", "hf", "hd", "pxOsd", "onetbb::libtbb"]
 
-        self.cpp_info.components["hdSt"].libs = ["usd_hdSt"]
-        self.cpp_info.components["hdSt"].requires = ["hio", "garch", "glf", "hd", "hdsi", "hgiGL", "hgiInterop", "sdr", "tf", "trace", "onetbb::libtbb", "opensubdiv::osdcpu", "opensubdiv::osdgpu"]
+        hdSt = _add_library("hdSt")
+        hdSt.requires = ["hio", "garch", "glf", "hd", "hdsi", "hgiGL", "hgiInterop", "sdr", "tf", "trace", "onetbb::libtbb", "opensubdiv::osdcpu", "opensubdiv::osdgpu"]
         if self.options.with_materialx:
-            self.cpp_info.components["hdSt"].requires = ["hdMtlx", "materialx::MaterialXGenShader", "materialx::MaterialXRender", "materialx::MaterialXCore", "materialx::MaterialXFormat",
+            hdSt.requires = ["hdMtlx", "materialx::MaterialXGenShader", "materialx::MaterialXRender", "materialx::MaterialXCore", "materialx::MaterialXFormat",
                                                          "materialx::MaterialXGenGlsl", "materialx::MaterialXGenMsl"]
         _add_library("hdx").requires = ["plug", "tf", "vt", "gf", "work", "garch", "glf", "pxOsd", "hd", "hdSt", "hgi", "hgiInterop", "cameraUtil", "sdf"]
 
@@ -213,36 +211,43 @@ class OpenUSDConan(ConanFile):
 
         # Plugins
         plugin_suffix = {
-            "Windows": "dll",
-            "Linux": "so",
-            "Macos": "dylib"
+            "Windows": "",
+            "Linux": ".so",
+            "Macos": ".dylib"
         }.get(str(self.settings.os), "so")
         plugin_dir = os.path.join("plugin", "usd")
 
-        self.cpp_info.components["hdStorm"].libs = [f"hdStorm.{plugin_suffix}"]
-        self.cpp_info.components["hdStorm"].libdirs = [plugin_dir]
-        self.cpp_info.components["hdStorm"].requires = ["plug", "tf", "trace", "vt", "work", "hd", "hdSt", "opensubdiv::osdcpu", "opensubdiv::osdgpu"]
-
-        self.cpp_info.components["hioAvif"].libs = [f"hioAvif.{plugin_suffix}"]
+        self.cpp_info.components["hioAvif"].libs = [f"hioAvif{plugin_suffix}"]
         self.cpp_info.components["hioAvif"].libdirs = [plugin_dir]
+        self.cpp_info.components["hioAvif"].bindirs = [plugin_dir]
         self.cpp_info.components["hioAvif"].requires = ["ar", "arch", "gf", "hio", "tf"]
 
         if is_apple_os(self):
-            self.cpp_info.components["hioImageIO"].libs = [f"hioImageIO.{plugin_suffix}"]
+            self.cpp_info.components["hioImageIO"].libs = [f"hioImageIO{plugin_suffix}"]
             self.cpp_info.components["hioImageIO"].libdirs = [plugin_dir]
+            self.cpp_info.components["hioImageIO"].bindirs = [plugin_dir]
             self.cpp_info.components["hioImageIO"].requires = ["ar", "arch", "gf", "hio", "tf"]
             self.cpp_info.components["hioImageIO"].frameworks = ["Foundation", "ImageIO", "CoreGraphics"]
 
         if self.options.with_openimageio:
-            self.cpp_info.components["hioOiio"].libs = [f"hioOiio.{plugin_suffix}"]
+            self.cpp_info.components["hioOiio"].libs = [f"hioOiio{plugin_suffix}"]
             self.cpp_info.components["hioOiio"].libdirs = [plugin_dir]
+            self.cpp_info.components["hioOiio"].bindirs = [plugin_dir]
             self.cpp_info.components["hioOiio"].requires = ["ar", "arch", "gf", "hio", "tf", "openimageio::openimageio"]
 
-        self.cpp_info.components["sdrGlslfx"].libs = [f"sdrGlslfx.{plugin_suffix}"]
-        self.cpp_info.components["sdrGlslfx"].libdirs = [plugin_dir]
-        self.cpp_info.components["sdrGlslfx"].requires = ["ar", "sdr", "hio"]
+        if self.settings.os != "Windows":
+            # This plugins are not exporting any symbols on windows
+            self.cpp_info.components["hdStorm"].libs = [f"hdStorm{plugin_suffix}"]
+            self.cpp_info.components["hdStorm"].libdirs = [plugin_dir]
+            self.cpp_info.components["hdStorm"].bindirs = [plugin_dir]
+            self.cpp_info.components["hdStorm"].requires = ["plug", "tf", "trace", "vt", "work", "hd", "hdSt", "opensubdiv::osdcpu", "opensubdiv::osdgpu"]
 
-        self.cpp_info.components["usdShaders"].libs = [f"usdShaders.{plugin_suffix}"]
-        self.cpp_info.components["usdShaders"].libdirs = [plugin_dir]
-        self.cpp_info.components["usdShaders"].requires = ["ar", "sdr", "usdShade"]
+            self.cpp_info.components["sdrGlslfx"].libs = [f"sdrGlslfx{plugin_suffix}"]
+            self.cpp_info.components["sdrGlslfx"].libdirs = [plugin_dir]
+            self.cpp_info.components["sdrGlslfx"].bindirs = [plugin_dir]
+            self.cpp_info.components["sdrGlslfx"].requires = ["ar", "sdr", "hio"]
 
+            self.cpp_info.components["usdShaders"].libs = [f"usdShaders{plugin_suffix}"]
+            self.cpp_info.components["usdShaders"].libdirs = [plugin_dir]
+            self.cpp_info.components["usdShaders"].bindirs = [plugin_dir]
+            self.cpp_info.components["usdShaders"].requires = ["ar", "sdr", "usdShade"]
