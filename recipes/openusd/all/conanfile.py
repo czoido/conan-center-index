@@ -103,113 +103,10 @@ class OpenUSDConan(ConanFile):
         rm(self, "pxrConfig.cmake", self.package_folder)
         rmdir(self, os.path.join(self.package_folder, "cmake"))
 
-    def package_info(self):
-        def _add_library(name):
-            self.cpp_info.components[name].libs = [f"usd_{name}"]
-            if self.settings.os == "Windows":
-                self.cpp_info.components[name].bindirs = ["lib"]
-            return self.cpp_info.components[name]
-
-        if self.settings.os in ["Linux", "FreeBSD"]:
-            self.cpp_info.system_libs.extend(["m", "pthread", "dl"])
-
+    @property
+    def components_info(self):
+        is_apple = is_apple_os(self)
         kit_framework = "AppKit" if self.settings.os == "Macos" else "UIKit"
-
-        _add_library("arch")
-        _add_library("tf").requires = ["arch", "onetbb::libtbb"]
-        _add_library("gf").requires = ["arch", "tf"]
-        _add_library("pegtl").requires = ["arch"]
-        _add_library("js").requires = ["tf"]
-        _add_library("trace").requires = ["arch", "js", "tf", "onetbb::libtbb"]
-        _add_library("work").requires = ["tf", "trace", "onetbb::libtbb"]
-        _add_library("plug").requires = ["arch", "tf", "js", "trace", "work", "onetbb::libtbb"]
-        _add_library("vt").requires = ["arch", "tf", "gf", "trace", "onetbb::libtbb"]
-        _add_library("ts").requires = ["vt", "gf", "tf"]
-        _add_library("ar").requires = ["arch", "js", "tf", "plug", "vt", "onetbb::libtbb"]
-        _add_library("kind").requires = ["tf", "plug"]
-        _add_library("sdf").requires = ["arch", "tf", "gf", "pegtl", "trace", "ts", "vt", "work", "ar", "onetbb::libtbb"]
-        _add_library("sdr").requires = ["arch", "plug", "trace", "tf", "vt", "work", "ar", "sdf"]
-        _add_library("pcp").requires = ["tf", "trace", "vt", "sdf", "work", "ar", "onetbb::libtbb"]
-        _add_library("usd").requires = ["arch", "kind", "pcp", "sdf", "ar", "plug", "tf", "trace", "ts", "vt", "work", "onetbb::libtbb"]
-        _add_library("usdGeom").requires = ["js", "tf", "plug", "vt", "sdf", "trace", "usd", "work", "onetbb::libtbb"]
-        _add_library("usdVol").requires = ["usd", "sdf", "tf", "trace"]
-        _add_library("usdMedia").requires = ["tf", "vt", "sdf", "usd", "usdGeom"]
-        _add_library("usdShade").requires = ["tf", "vt", "js", "sdf", "sdr", "usd", "usdGeom", "onetbb::libtbb"]
-        _add_library("usdLux").requires = ["tf", "vt", "sdf", "sdr", "usd", "usdGeom", "usdShade"]
-        _add_library("usdProc").requires = ["tf", "usd", "usdGeom"]
-        _add_library("usdRender").requires = ["gf", "tf", "usd", "usdGeom", "usdShade"]
-        _add_library("usdHydra").requires = ["tf", "usd", "usdShade"]
-        _add_library("usdRi").requires = ["tf", "vt", "sdf", "usd", "usdShade", "usdGeom"]
-        _add_library("usdSemantics").requires = ["tf", "vt", "sdf", "usd", "usdGeom"]
-        _add_library("usdSkel").requires = ["arch", "gf", "tf", "trace", "vt", "work", "sdf", "usd", "usdGeom", "onetbb::libtbb"]
-        _add_library("usdUI").requires = ["tf", "vt", "sdf", "usd"]
-        _add_library("usdUtils").requires = ["arch", "tf", "gf", "sdf", "usd", "usdGeom", "usdShade", "onetbb::libtbb"]
-        _add_library("usdPhysics").requires = ["tf", "plug", "vt", "sdf", "trace", "usd", "usdGeom", "usdShade", "work"]
-        _add_library("vdf").requires = ["arch", "gf", "tf", "trace", "vt", "work", "onetbb::libtbb"]
-        _add_library("ef").requires = ["vdf", "arch", "tf", "trace", "usd", "work", "onetbb::libtbb"]
-        _add_library("esf").requires = ["arch", "sdf", "tf", "vt", "usd"]
-        _add_library("esfUsd").requires = ["arch", "esf", "tf", "sdf", "usd"]
-        _add_library("exec").requires = ["ef", "esf", "tf", "trace", "ts", "sdf", "usd", "vdf", "vt", "onetbb::libtbb"]
-        _add_library("execUsd").requires = ["esf", "esfUsd", "exec", "tf", "trace", "sdf", "usd"]
-        _add_library("execGeom").requires = ["gf", "tf", "execUsd", "usdGeom"]
-        _add_library("usdValidation").requires = ["sdf", "plug", "tf", "gf", "usd", "work"]
-        _add_library("usdGeomValidators").requires = ["tf", "plug", "sdf", "usd", "usdGeom", "usdValidation"]
-        _add_library("usdPhysicsValidators").requires = ["tf", "plug", "sdf", "usd", "usdGeom", "usdPhysics", "usdValidation"]
-        _add_library("usdShadeValidators").requires = ["tf", "plug", "sdf", "usd", "sdr", "usdShade", "usdValidation"]
-        _add_library("usdSkelValidators").requires = ["tf", "plug", "sdf", "usd", "usdSkel", "usdValidation"]
-        _add_library("usdUtilsValidators").requires = ["tf", "plug", "sdf", "usd", "usdUtils", "usdValidation"]
-
-        garch = _add_library("garch")
-        garch.requires = ["arch", "tf", "opengl::opengl"]
-        if is_apple_os(self):
-            garch.frameworks = ["Foundation", kit_framework]
-
-        _add_library("hf").requires = ["plug", "tf", "trace"]
-        _add_library("hio").requires = ["arch", "js", "plug", "tf", "vt", "trace", "ar", "hf"]
-        _add_library("cameraUtil").requires = ["tf", "gf"]
-        _add_library("pxOsd").requires = ["tf", "gf", "vt", "opensubdiv::osdcpu"]
-        _add_library("geomUtil").requires = ["arch", "gf", "tf", "vt", "pxOsd"]
-        _add_library("glf").requires = ["ar", "arch", "garch", "gf", "hf", "hio", "plug", "tf", "trace", "sdf"]
-        _add_library("hgi").requires = ["gf", "plug", "tf", "hio"]
-        _add_library("hgiGL").requires = ["arch", "garch", "hf", "hgi", "tf", "trace"]
-
-        if is_apple_os(self):
-            hgiMetal = _add_library("hgiMetal")
-            hgiMetal.requires = ["arch", "hgi", "tf", "trace"]
-            hgiMetal.frameworks = ["Foundation", "Metal", kit_framework]
-
-        hgiInterop = _add_library("hgiInterop")
-        hgiInterop.requires = ["gf", "tf", "hgi", "vt", "garch"]
-        if is_apple_os(self):
-            hgiInterop.frameworks = ["Foundation", "CoreVideo"]
-            hgiInterop.requires.append("hgiMetal")
-
-        _add_library("hd").requires = ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil", "hf", "pxOsd", "sdr", "onetbb::libtbb"]
-        _add_library("hdar").requires = ["hd", "ar"]
-        _add_library("hdGp").requires = ["hd", "hf", "onetbb::libtbb"]
-        _add_library("hdsi").requires = ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil", "geomUtil", "hf", "hd", "pxOsd", "onetbb::libtbb"]
-
-        hdSt = _add_library("hdSt")
-        hdSt.requires = ["hio", "garch", "glf", "hd", "hdsi", "hgiGL", "hgiInterop", "sdr", "tf", "trace", "onetbb::libtbb", "opensubdiv::osdcpu", "opensubdiv::osdgpu"]
-        if self.options.with_materialx:
-            hdSt.requires = ["hdMtlx", "materialx::MaterialXGenShader", "materialx::MaterialXRender", "materialx::MaterialXCore", "materialx::MaterialXFormat",
-                                                         "materialx::MaterialXGenGlsl", "materialx::MaterialXGenMsl"]
-        _add_library("hdx").requires = ["plug", "tf", "vt", "gf", "work", "garch", "glf", "pxOsd", "hd", "hdSt", "hgi", "hgiInterop", "cameraUtil", "sdf"]
-
-        if self.options.with_materialx:
-            _add_library("usdMtlx").requires = ["arch", "gf", "sdf", "sdr", "tf", "vt", "usd", "usdGeom", "usdShade", "usdUI", "usdUtils", "materialx::MaterialXCore", "materialx::MaterialXFormat"]
-            _add_library("hdMtlx").requires = ["gf", "hd", "sdf", "sdr", "tf", "trace", "usdMtlx", "vt", "materialx::MaterialXCore", "materialx::MaterialXFormat"]
-            _add_library("usdBakeMtlx").requires = ["tf", "sdr", "usdMtlx", "usdShade", "hd", "hdMtlx", "usdImaging", "materialx::MaterialXCore", "materialx::MaterialXFormat", "materialx::MaterialXRenderGlsl"]
-
-        _add_library("usdImaging").requires = ["gf", "tf", "plug", "trace", "vt", "work", "geomUtil", "hd", "hdar", "hio", "pxOsd", "sdf", "usd", "usdGeom", "usdLux", "usdRender", "usdShade", "usdVol", "ar", "onetbb::libtbb"]
-        _add_library("usdImagingGL").requires = ["gf", "tf", "plug", "trace", "vt", "work", "hio", "garch", "glf", "hd", "hdsi", "hdx", "pxOsd", "sdf", "sdr", "usd", "usdGeom", "usdHydra", "usdShade", "usdImaging", "ar"]
-        _add_library("usdProcImaging").requires = ["usdImaging", "usdProc"]
-        _add_library("usdRiPxrImaging").requires = ["gf", "tf", "plug", "trace", "vt", "work", "hd", "pxOsd", "sdf", "usd", "usdGeom", "usdLux", "usdShade", "usdImaging", "usdVol", "ar"]
-        _add_library("usdSkelImaging").requires = ["hio", "hd", "usdImaging", "usdSkel"]
-        _add_library("usdVolImaging").requires = ["usdImaging"]
-        _add_library("usdAppUtils").requires = ["garch", "gf", "hio", "sdf", "tf", "usd", "usdGeom", "usdImagingGL"]
-
-        # Plugins
         plugin_suffix = {
             # Windows searches for libname without lib prefix, which works for the plugin naming scheme,
             # No need to declare the extensions and force a specific file name then as with the other OSs
@@ -218,38 +115,302 @@ class OpenUSDConan(ConanFile):
             "Macos": ".dylib"
         }.get(str(self.settings.os), "so")
         plugin_dir = os.path.join("plugin", "usd")
+        return {
+            "arch": {},
+            "tf": {
+                "requires": ["arch", "onetbb::libtbb"]
+            },
+            "gf": {
+                "requires": ["arch", "tf"]
+            },
+            "pegtl": {
+                "requires": ["arch"]
+            },
+            "js": {
+                "requires": ["tf"]
+            },
+            "trace": {
+                "requires": ["arch", "js", "tf", "onetbb::libtbb"]
+            },
+            "work": {
+                "requires": ["tf", "trace", "onetbb::libtbb"]
+            },
+            "plug": {
+                "requires": ["arch", "tf", "js", "trace", "work", "onetbb::libtbb"]
+            },
+            "vt": {
+                "requires": ["arch", "tf", "gf", "trace", "onetbb::libtbb"]
+            },
+            "ts": {
+                "requires": ["vt", "gf", "tf"]
+            },
+            "ar": {
+                "requires": ["arch", "js", "tf", "plug", "vt", "onetbb::libtbb"]
+            },
+            "kind": {
+                "requires": ["tf", "plug"]
+            },
+            "sdf": {
+                "requires": ["arch", "tf", "gf", "pegtl", "trace", "ts", "vt", "work", "ar", "onetbb::libtbb"]
+            },
+            "sdr": {
+                "requires": ["arch", "plug", "trace", "tf", "vt", "work", "ar", "sdf"]
+            },
+            "pcp": {
+                "requires": ["tf", "trace", "vt", "sdf", "work", "ar", "onetbb::libtbb"]
+            },
+            "usd": {
+                "requires": ["arch", "kind", "pcp", "sdf", "ar", "plug", "tf", "trace", "ts", "vt", "work", "onetbb::libtbb"]
+            },
+            "usdGeom": {
+                "requires": ["js", "tf", "plug", "vt", "sdf", "trace", "usd", "work", "onetbb::libtbb"]
+            },
+            "usdVol": {
+                "requires": ["usd", "sdf", "tf", "trace"]
+            },
+            "usdMedia": {
+                "requires": ["tf", "vt", "sdf", "usd", "usdGeom"]
+            },
+            "usdShade": {
+                "requires": ["tf", "vt", "js", "sdf", "sdr", "usd", "usdGeom", "onetbb::libtbb"]
+            },
+            "usdLux": {
+                "requires": ["tf", "vt", "sdf", "sdr", "usd", "usdGeom", "usdShade"]
+            },
+            "usdProc": {
+                "requires": ["tf", "usd", "usdGeom"]
+            },
+            "usdRender": {
+                "requires": ["gf", "tf", "usd", "usdGeom", "usdShade"]
+            },
+            "usdHydra": {
+                "requires": ["tf", "usd", "usdShade"]
+            },
+            "usdRi": {
+                "requires": ["tf", "vt", "sdf", "usd", "usdShade", "usdGeom"]
+            },
+            "usdSemantics": {
+                "requires": ["tf", "vt", "sdf", "usd", "usdGeom"]
+            },
+            "usdSkel": {
+                "requires": ["arch", "gf", "tf", "trace", "vt", "work", "sdf", "usd", "usdGeom", "onetbb::libtbb"]
+            },
+            "usdUI": {
+                "requires": ["tf", "vt", "sdf", "usd"]
+            },
+            "usdUtils": {
+                "requires": ["arch", "tf", "gf", "sdf", "usd", "usdGeom", "usdShade", "onetbb::libtbb"]
+            },
+            "usdPhysics": {
+                "requires": ["tf", "plug", "vt", "sdf", "trace", "usd", "usdGeom", "usdShade", "work"]
+            },
+            "vdf": {
+                "requires": ["arch", "gf", "tf", "trace", "vt", "work", "onetbb::libtbb"]
+            },
+            "ef": {
+                "requires": ["vdf", "arch", "tf", "trace", "usd", "work", "onetbb::libtbb"]
+            },
+            "esf": {
+                "requires": ["arch", "sdf", "tf", "vt", "usd"]
+            },
+            "esfUsd": {
+                "requires": ["arch", "esf", "tf", "sdf", "usd"]
+            },
+            "exec": {
+                "requires": ["ef", "esf", "tf", "trace", "ts", "sdf", "usd", "vdf", "vt", "onetbb::libtbb"]
+            },
+            "execUsd": {
+                "requires": ["esf", "esfUsd", "exec", "tf", "trace", "sdf", "usd"]
+            },
+            "execGeom": {
+                "requires": ["gf", "tf", "execUsd", "usdGeom"]
+            },
+            "usdValidation": {
+                "requires": ["sdf", "plug", "tf", "gf", "usd", "work"]
+            },
+            "usdGeomValidators": {
+                "requires": ["tf", "plug", "sdf", "usd", "usdGeom", "usdValidation"]
+            },
+            "usdPhysicsValidators": {
+                "requires": ["tf", "plug", "sdf", "usd", "usdGeom", "usdPhysics", "usdValidation"]
+            },
+            "usdShadeValidators": {
+                "requires": ["tf", "plug", "sdf", "usd", "sdr", "usdShade", "usdValidation"]
+            },
+            "usdSkelValidators": {
+                "requires": ["tf", "plug", "sdf", "usd", "usdSkel", "usdValidation"]
+            },
+            "usdUtilsValidators": {
+                "requires": ["tf", "plug", "sdf", "usd", "usdUtils", "usdValidation"]
+            },
+            "garch": {
+                "requires": ["arch", "tf", "opengl::opengl"],
+                "frameworks": ["Foundation", kit_framework]
+            },
+            "hf": {
+                "requires": ["plug", "tf", "trace"]
+            },
+            "hio": {
+                "requires": ["arch", "js", "plug", "tf", "vt", "trace", "ar", "hf"]
+            },
+            "cameraUtil": {
+                "requires": ["tf", "gf"]
+            },
+            "pxOsd": {
+                "requires": ["tf", "gf", "vt", "opensubdiv::osdcpu"]
+            },
+            "geomUtil": {
+                "requires": ["arch", "gf", "tf", "vt", "pxOsd"]
+            },
+            "glf": {
+                "requires": ["ar", "arch", "garch", "gf", "hf", "hio", "plug", "tf", "trace", "sdf"]
+            },
+            "hgi": {
+                "requires": ["gf", "plug", "tf", "hio"]
+            },
+            "hgiGL": {
+                "requires": ["arch", "garch", "hf", "hgi", "tf", "trace"]
+            },
+            "hgiMetal": {
+                "condition": is_apple,
+                "requires": ["arch", "hgi", "tf", "trace"],
+                "frameworks": ["Foundation", "Metal", kit_framework]
+            },
+            "hgiInterop": {
+                "requires": ["gf", "tf", "hgi", "vt", "garch"] + (["hgiMetal"] if is_apple else []),
+                "frameworks": ["Foundation", "CoreVideo"]
+            },
+            "hd": {
+                "requires": ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil",
+                             "hf", "pxOsd", "sdr", "onetbb::libtbb"]
+            },
+            "hdar": {
+                "requires": ["hd", "ar"]
+            },
+            "hdGp": {
+                "requires": ["hd", "hf", "onetbb::libtbb"]
+            },
+            "hdsi": {
+                "requires": ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil",
+                             "geomUtil", "hf", "hd", "pxOsd", "onetbb::libtbb"]
+            },
+            "hdSt": {
+                "requires": ["hdMtlx", "materialx::MaterialXGenShader", "materialx::MaterialXRender",
+                             "materialx::MaterialXCore", "materialx::MaterialXFormat",
+                             "materialx::MaterialXGenGlsl", "materialx::MaterialXGenMsl"] if self.options.with_materialx else
+                            ["hio", "garch", "glf", "hd", "hdsi", "hgiGL", "hgiInterop", "sdr",
+                             "tf", "trace", "onetbb::libtbb", "opensubdiv::osdcpu", "opensubdiv::osdgpu"]
+            },
+            "hdx": {
+                "requires": ["plug", "tf", "vt", "gf", "work", "garch", "glf", "pxOsd", "hd",
+                             "hdSt", "hgi", "hgiInterop", "cameraUtil", "sdf"]
+            },
+            "usdMtlx": {
+                "condition": self.options.with_materialx,
+                "requires": ["arch", "gf", "sdf", "sdr", "tf", "vt", "usd", "usdGeom", "usdShade", "usdUI",
+                             "usdUtils", "materialx::MaterialXCore", "materialx::MaterialXFormat"]
+            },
+            "hdMtlx": {
+                "condition": self.options.with_materialx,
+                "requires": ["gf", "hd", "sdf", "sdr", "tf", "trace", "usdMtlx", "vt",
+                             "materialx::MaterialXCore", "materialx::MaterialXFormat"]
+            },
+            "usdBakeMtlx": {
+                "condition": self.options.with_materialx,
+                "requires": ["tf", "sdr", "usdMtlx", "usdShade", "hd", "hdMtlx", "usdImaging", "materialx::MaterialXCore",
+                             "materialx::MaterialXFormat", "materialx::MaterialXRenderGlsl"]
+            },
+            "usdImaging": {
+                "requires": ["gf", "tf", "plug", "trace", "vt", "work", "geomUtil", "hd", "hdar", "hio", "pxOsd", "sdf", "usd",
+                             "usdGeom", "usdLux", "usdRender", "usdShade", "usdVol", "ar", "onetbb::libtbb"]
+            },
+            "usdImagingGL": {
+                "requires": ["gf", "tf", "plug", "trace", "vt", "work", "hio", "garch", "glf", "hd", "hdsi", "hdx", "pxOsd",
+                             "sdf", "sdr", "usd", "usdGeom", "usdHydra", "usdShade", "usdImaging", "ar"]
+            },
+            "usdProcImaging": {
+                "requires": ["usdImaging", "usdProc"]
+            },
+            "usdRiPxrImaging": {
+                "requires": ["gf", "tf", "plug", "trace", "vt", "work", "hd", "pxOsd", "sdf", "usd", "usdGeom", "usdLux", "usdShade", "usdImaging", "usdVol", "ar"]
+            },
+            "usdSkelImaging": {
+                "requires": ["hio", "hd", "usdImaging", "usdSkel"]
+            },
+            "usdVolImaging": {
+                "requires": ["usdImaging"]
+            },
+            "usdAppUtils": {
+                "requires": ["garch", "gf", "hio", "sdf", "tf", "usd", "usdGeom", "usdImagingGL"]
+            },
+            # Plugins
+            "hioAvif": {
+                "libs": [f"hioAvif{plugin_suffix}"],
+                "libdirs": [plugin_dir],
+                "bindirs": [plugin_dir],
+                "requires": ["ar", "arch", "gf", "hio", "tf"],
+                "system_libs": []
+            },
+            "hioImageIO": {
+                "condition": is_apple,
+                "libs": [f"hioImageIO{plugin_suffix}"],
+                "libdirs": [plugin_dir],
+                "bindirs": [plugin_dir],
+                "requires": ["ar", "arch", "gf", "hio", "tf"],
+                "frameworks": ["Foundation", "ImageIO", "CoreGraphics"],
+                "system_libs": []
+            },
+            "hioOiio": {
+                "condition": self.options.with_openimageio,
+                "libs": [f"hioOiio{plugin_suffix}"],
+                "libdirs": [plugin_dir],
+                "bindirs": [plugin_dir],
+                "requires": ["ar", "arch", "gf", "hio", "tf", "openimageio::openimageio"],
+                "system_libs": []
+            },
+            "hdStorm": {
+                "condition": self.settings.os != "Windows",
+                "libs": [f"hdStorm{plugin_suffix}"],
+                "libdirs": [plugin_dir],
+                "bindirs": [plugin_dir],
+                "requires": ["plug", "tf", "trace", "vt", "work", "hd", "hdSt", "opensubdiv::osdcpu", "opensubdiv::osdgpu"],
+                "system_libs": []
+            },
+            "sdrGlslfx": {
+                "condition": self.settings.os != "Windows",
+                "libs": [f"sdrGlslfx{plugin_suffix}"],
+                "libdirs": [plugin_dir],
+                "bindirs": [plugin_dir],
+                "requires": ["ar", "sdr", "hio"],
+                "system_libs": []
+            },
+            "usdShaders": {
+                "condition": self.settings.os != "Windows",
+                "libs": [f"usdShaders{plugin_suffix}"],
+                "libdirs": [plugin_dir],
+                "bindirs": [plugin_dir],
+                "requires": ["ar", "sdr", "usdShade"],
+                "system_libs": []
+            }
+        }
 
-        self.cpp_info.components["hioAvif"].libs = [f"hioAvif{plugin_suffix}"]
-        self.cpp_info.components["hioAvif"].libdirs = [plugin_dir]
-        self.cpp_info.components["hioAvif"].bindirs = [plugin_dir]
-        self.cpp_info.components["hioAvif"].requires = ["ar", "arch", "gf", "hio", "tf"]
-
-        if is_apple_os(self):
-            self.cpp_info.components["hioImageIO"].libs = [f"hioImageIO{plugin_suffix}"]
-            self.cpp_info.components["hioImageIO"].libdirs = [plugin_dir]
-            self.cpp_info.components["hioImageIO"].bindirs = [plugin_dir]
-            self.cpp_info.components["hioImageIO"].requires = ["ar", "arch", "gf", "hio", "tf"]
-            self.cpp_info.components["hioImageIO"].frameworks = ["Foundation", "ImageIO", "CoreGraphics"]
-
-        if self.options.with_openimageio:
-            self.cpp_info.components["hioOiio"].libs = [f"hioOiio{plugin_suffix}"]
-            self.cpp_info.components["hioOiio"].libdirs = [plugin_dir]
-            self.cpp_info.components["hioOiio"].bindirs = [plugin_dir]
-            self.cpp_info.components["hioOiio"].requires = ["ar", "arch", "gf", "hio", "tf", "openimageio::openimageio"]
-
-        if self.settings.os != "Windows":
-            # This plugins are not exporting any symbols on windows
-            self.cpp_info.components["hdStorm"].libs = [f"hdStorm{plugin_suffix}"]
-            self.cpp_info.components["hdStorm"].libdirs = [plugin_dir]
-            self.cpp_info.components["hdStorm"].bindirs = [plugin_dir]
-            self.cpp_info.components["hdStorm"].requires = ["plug", "tf", "trace", "vt", "work", "hd", "hdSt", "opensubdiv::osdcpu", "opensubdiv::osdgpu"]
-
-            self.cpp_info.components["sdrGlslfx"].libs = [f"sdrGlslfx{plugin_suffix}"]
-            self.cpp_info.components["sdrGlslfx"].libdirs = [plugin_dir]
-            self.cpp_info.components["sdrGlslfx"].bindirs = [plugin_dir]
-            self.cpp_info.components["sdrGlslfx"].requires = ["ar", "sdr", "hio"]
-
-            self.cpp_info.components["usdShaders"].libs = [f"usdShaders{plugin_suffix}"]
-            self.cpp_info.components["usdShaders"].libdirs = [plugin_dir]
-            self.cpp_info.components["usdShaders"].bindirs = [plugin_dir]
-            self.cpp_info.components["usdShaders"].requires = ["ar", "sdr", "usdShade"]
+    def package_info(self):
+        for comp_name, comp_info in self.components_info.items():
+            if not comp_info.get("condition", True):
+                # It does not fulfill the condition
+                continue
+            # default library name usd_xxxx
+            self.cpp_info.components[comp_name].libs = comp_info.get("libs", [f"usd_{comp_name}"])
+            self.cpp_info.components[comp_name].requires = comp_info.get("requires", [])
+            if is_apple_os(self):
+                self.cpp_info.components[comp_name].frameworks = comp_info.get("frameworks", [])
+            if "libdirs" in comp_info:
+                self.cpp_info.components[comp_name].libdirs = comp_info["libdirs"]
+            if "bindirs" in comp_info:
+                self.cpp_info.components[comp_name].bindirs = comp_info["bindirs"]
+            elif self.settings.os == "Windows":
+                self.cpp_info.components[comp_name].bindirs = ["lib"]
+            if "system_libs" in comp_info:
+                self.cpp_info.components[comp_name].system_libs = comp_info["system_libs"]
+            elif self.settings.os in ["Linux", "FreeBSD"]:
+                self.cpp_info.components[comp_name].system_libs = ["m", "pthread", "dl"]
