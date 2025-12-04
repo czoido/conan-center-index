@@ -22,8 +22,8 @@ class OpenUSDConan(ConanFile):
         "with_materialx": [True, False],
     }
     default_options = {
-        "with_openimageio": True,
-        "with_materialx": True
+        "with_openimageio": False,
+        "with_materialx": False
     }
 
     def export_sources(self):
@@ -199,7 +199,7 @@ class OpenUSDConan(ConanFile):
                 "requires": ["tf", "vt", "sdf", "usd"]
             },
             "usdUtils": {
-                "requires": ["arch", "tf", "gf", "sdf", "usd", "usdGeom", "usdShade", "onetbb::libtbb"]
+                "requires": ["arch", "tf", "gf", "sdf", "usd", "usdGeom", "usdShade", "usdUI", "onetbb::libtbb"]
             },
             "usdPhysics": {
                 "requires": ["tf", "plug", "vt", "sdf", "trace", "usd", "usdGeom", "usdShade", "work"]
