@@ -22,8 +22,8 @@ class OpenUSDConan(ConanFile):
         "with_materialx": [True, False],
     }
     default_options = {
-        "with_openimageio": False,
-        "with_materialx": False
+        "with_openimageio": True,
+        "with_materialx": True
     }
 
     def export_sources(self):
@@ -42,7 +42,7 @@ class OpenUSDConan(ConanFile):
             self.requires("materialx/1.39.1")
 
     def build_requirements(self):
-        self.tool_requires("cmake/[>=3.26 <5]")
+        self.tool_requires("cmake/[>=3.26]")
 
     def validate(self):
         check_min_cppstd(self, 17)
