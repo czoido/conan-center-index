@@ -45,3 +45,7 @@ patches:
       "patch_file": "patches/ffmpeg-x86-optimization.patch"
       "patch_source": "https://packages.ubuntu.com/source/focal-updates/qtwebengine-opensource-src"
       "patch_type": "portability"
+    - "base_path": "qt5/qtbase"
+      "patch_description": "macOS: drop AGL.framework refs from mkspec (removed in macOS 26 SDK)"
+      "patch_file": "patches/5.15.18-macos-remove-agl-references.patch"
+      "patch_type": "portability"
