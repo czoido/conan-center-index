@@ -4,8 +4,9 @@ from conan.tools.apple import is_apple_os
 from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 from conan.tools.files import copy, get, rm, rmdir, apply_conandata_patches, export_conandata_patches
+from conan.tools.scm import Version
 import os
-# mirror
+
 required_conan_version = ">=2.1"
 
 class OpenUSDConan(ConanFile):
@@ -15,6 +16,10 @@ class OpenUSDConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://openusd.org/"
     topics = ("3d", "scene", "usd")
+    # Only shared builds are offered on purpose. Quoting upstream BUILDING.md about
+    # BUILD_SHARED_LIBS=OFF: "it does not allow USD plugins or Python modules since that
+    # would necessarily cause multiple symbol definitions". A static OpenUSD loses the
+    # plugin system that most of the library is built around.
     package_type = "shared-library"
     settings = "os", "arch", "compiler", "build_type"
     options = {
@@ -25,6 +30,18 @@ class OpenUSDConan(ConanFile):
         "with_openimageio": False,
         "with_materialx": False
     }
+
+    short_paths = True
+
+    @property
+    def _compilers_minimum_version(self):
+        # As defined in https://github.com/PixarAnimationStudios/OpenUSD/blob/release/VERSIONS.md
+        return {
+            "apple-clang": "13",
+            "clang": "7",
+            "gcc": "9",
+            "msvc": "191",
+        }
 
     def export_sources(self):
         export_conandata_patches(self)
@@ -37,15 +54,21 @@ class OpenUSDConan(ConanFile):
         self.requires("opensubdiv/3.6.0")
         self.requires("opengl/system")
         if self.options.with_openimageio:
-            self.requires("openimageio/2.5.19.1")
+            self.requires("openimageio/2.5.18.0")
         if self.options.with_materialx:
             self.requires("materialx/1.39.1")
 
     def build_requirements(self):
-        self.tool_requires("cmake/[>=3.26]")
+        self.tool_requires("cmake/[>=3.27 <4]")
 
     def validate(self):
         check_min_cppstd(self, 17)
+        minimum_version = self._compilers_minimum_version.get(str(self.settings.compiler))
+        if minimum_version and Version(self.settings.compiler.version) < minimum_version:
+            raise ConanInvalidConfiguration(
+                f"{self.ref} requires C++17 support, which {self.settings.compiler} "
+                f"{self.settings.compiler.version} does not provide."
+            )
         if self.options.with_materialx and not self.dependencies["materialx"].options.shared:
             raise ConanInvalidConfiguration('openusd requires -o "materialx/*:shared=True"')
 
@@ -166,7 +189,7 @@ class OpenUSDConan(ConanFile):
                 "requires": ["js", "tf", "plug", "vt", "sdf", "trace", "usd", "work", "onetbb::libtbb"]
             },
             "usdVol": {
-                "requires": ["usd", "sdf", "tf", "trace"]
+                "requires": ["tf", "usd", "usdGeom"]
             },
             "usdMedia": {
                 "requires": ["tf", "vt", "sdf", "usd", "usdGeom"]
@@ -190,7 +213,7 @@ class OpenUSDConan(ConanFile):
                 "requires": ["tf", "vt", "sdf", "usd", "usdShade", "usdGeom"]
             },
             "usdSemantics": {
-                "requires": ["tf", "vt", "sdf", "usd", "usdGeom"]
+                "requires": ["tf", "vt", "usd"]
             },
             "usdSkel": {
                 "requires": ["arch", "gf", "tf", "trace", "vt", "work", "sdf", "usd", "usdGeom", "onetbb::libtbb"]
@@ -203,6 +226,12 @@ class OpenUSDConan(ConanFile):
             },
             "usdPhysics": {
                 "requires": ["tf", "plug", "vt", "sdf", "trace", "usd", "usdGeom", "usdShade", "work"]
+            },
+            "usdLod": {
+                "requires": ["tf", "gf", "vt", "sdf", "usd", "usdGeom"]
+            },
+            "usdProfiles": {
+                "requires": ["arch", "tf", "plug", "vt", "js", "sdf", "usd"]
             },
             "vdf": {
                 "requires": ["arch", "gf", "tf", "trace", "vt", "work", "onetbb::libtbb"]
@@ -225,6 +254,9 @@ class OpenUSDConan(ConanFile):
             "execGeom": {
                 "requires": ["gf", "tf", "execUsd", "usdGeom"]
             },
+            "execIr": {
+                "requires": ["execGeom", "execUsd", "gf", "sdf", "tf", "usd", "vt"]
+            },
             "usdValidation": {
                 "requires": ["sdf", "plug", "tf", "gf", "usd", "work"]
             },
@@ -242,6 +274,9 @@ class OpenUSDConan(ConanFile):
             },
             "usdUtilsValidators": {
                 "requires": ["tf", "plug", "sdf", "usd", "usdUtils", "usdValidation"]
+            },
+            "usdLuxValidators": {
+                "requires": ["tf", "plug", "sdf", "usd", "sdr", "usdShade", "usdLux", "usdValidation"]
             },
             "garch": {
                 "requires": ["arch", "tf", "opengl::opengl"],
@@ -291,15 +326,17 @@ class OpenUSDConan(ConanFile):
                 "requires": ["hd", "hf", "onetbb::libtbb"]
             },
             "hdsi": {
-                "requires": ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil",
-                             "geomUtil", "hf", "hd", "pxOsd", "onetbb::libtbb"]
+                "requires": ["plug", "tf", "trace", "vt", "work", "sdf", "cameraUtil", "usdShade",
+                             "usdVol", "geomUtil", "hf", "hd", "pxOsd", "onetbb::libtbb"]
             },
             "hdSt": {
-                "requires": ["hdMtlx", "materialx::MaterialXGenShader", "materialx::MaterialXRender",
-                             "materialx::MaterialXCore", "materialx::MaterialXFormat",
-                             "materialx::MaterialXGenGlsl", "materialx::MaterialXGenMsl"] if self.options.with_materialx else
-                            ["hio", "garch", "glf", "hd", "hdsi", "hgiGL", "hgiInterop", "sdr",
+                # MaterialX comes in through ${optionalLibs}, on top of the base list
+                "requires": ["hio", "garch", "glf", "hd", "hdsi", "hgiGL", "hgiInterop", "sdr",
                              "tf", "trace", "onetbb::libtbb", "opensubdiv::osdcpu", "opensubdiv::osdgpu"]
+                            + (["hdMtlx", "materialx::MaterialXGenShader", "materialx::MaterialXRender",
+                                "materialx::MaterialXCore", "materialx::MaterialXFormat",
+                                "materialx::MaterialXGenGlsl", "materialx::MaterialXGenMsl"]
+                               if self.options.with_materialx else [])
             },
             "hdx": {
                 "requires": ["plug", "tf", "vt", "gf", "work", "garch", "glf", "pxOsd", "hd",
@@ -321,18 +358,22 @@ class OpenUSDConan(ConanFile):
                              "materialx::MaterialXFormat", "materialx::MaterialXRenderGlsl"]
             },
             "usdImaging": {
-                "requires": ["gf", "tf", "plug", "trace", "vt", "work", "geomUtil", "hd", "hdar", "hio", "pxOsd", "sdf", "usd",
-                             "usdGeom", "usdLux", "usdRender", "usdShade", "usdVol", "ar", "onetbb::libtbb"]
+                "requires": ["gf", "tf", "plug", "trace", "vt", "work", "geomUtil", "hd", "hdar", "hdsi", "hio", "pxOsd",
+                             "sdf", "usd", "usdGeom", "usdLux", "usdRender", "usdShade", "usdSkel", "usdVol", "ar",
+                             "onetbb::libtbb"]
+            },
+            "usdExecImaging": {
+                "requires": ["execGeom", "execIr", "execUsd", "hd", "sdf", "tf", "trace", "usd", "usdGeom", "vt"]
+            },
+            "usdIrImaging": {
+                "requires": ["execIr", "gf", "hd", "tf", "usd", "usdGeom", "usdImaging"]
             },
             "usdImagingGL": {
                 "requires": ["gf", "tf", "plug", "trace", "vt", "work", "hio", "garch", "glf", "hd", "hdsi", "hdx", "pxOsd",
-                             "sdf", "sdr", "usd", "usdGeom", "usdHydra", "usdShade", "usdImaging", "ar"]
+                             "sdf", "sdr", "usd", "usdGeom", "usdHydra", "usdShade", "usdImaging", "usdExecImaging", "ar"]
             },
             "usdProcImaging": {
                 "requires": ["usdImaging", "usdProc"]
-            },
-            "usdRiPxrImaging": {
-                "requires": ["gf", "tf", "plug", "trace", "vt", "work", "hd", "pxOsd", "sdf", "usd", "usdGeom", "usdLux", "usdShade", "usdImaging", "usdVol", "ar"]
             },
             "usdSkelImaging": {
                 "requires": ["hio", "hd", "usdImaging", "usdSkel"]
@@ -344,6 +385,13 @@ class OpenUSDConan(ConanFile):
                 "requires": ["garch", "gf", "hio", "sdf", "tf", "usd", "usdGeom", "usdImagingGL"]
             },
             # Plugins
+            "hioOpenEXR": {
+                "libs": [f"hioOpenEXR{plugin_suffix}"],
+                "libdirs": [plugin_dir],
+                "bindirs": [plugin_dir],
+                "requires": ["ar", "arch", "gf", "hio", "tf"],
+                "system_libs": []
+            },
             "hioAvif": {
                 "libs": [f"hioAvif{plugin_suffix}"],
                 "libdirs": [plugin_dir],

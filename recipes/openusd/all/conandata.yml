@@ -1,8 +1,10 @@
 sources:
-  "25.11":
-    url: "https://github.com/PixarAnimationStudios/OpenUSD/archive/refs/tags/v25.11.tar.gz"
-    sha256: "c37c633b5037a4552f61574670ecca8836229b78326bd62622f3422671188667"
+  "26.08":
+    url: "https://github.com/PixarAnimationStudios/OpenUSD/archive/refs/tags/v26.08.tar.gz"
+    sha256: "4bccbb95cddda1dbeef2f74a08b9456352f2aa91bfd4578c0c613009c7950149"
 
 patches:
-  "25.11":
-    - patch_file: "patches/25.08-fix-openimageio-imath.patch"
+  "26.08":
+    - patch_file: "patches/26.08-fix-openimageio-imath.patch"
+      patch_description: "Let the OpenImageIO CMake target carry Imath instead of looking it up separately"
+      patch_type: "conan"
